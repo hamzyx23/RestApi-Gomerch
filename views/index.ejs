@@ -1,0 +1,3276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4e8">
+<title>GoMerchPro — GoPay Merchant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+:root {
+  --bg: #0a0e14;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-border2: rgba(255,255,255,0.18);
+  --text: #f0f4f8;
+  --muted: #8b9aab;
+  --green: #00d68f;
+  --green2: #00b377;
+  --green-glow: rgba(0,214,143,0.25);
+  --purple: #7c6bff;
+  --blue: #6b8aff;
+  --red: #ff5c6c;
+  --orange: #ff9f43;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,214,143,0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(107,138,255,0.08), transparent 45%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 80%);
+  pointer-events: none; z-index: 0;
+}
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.glass-strong {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid var(--glass-border2);
+}
+html.reduced .glass, html.reduced .glass-strong, html.reduced .header,
+html.reduced .console-fab, html.reduced .docs-header {
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html.reduced .glass { background: rgba(20,26,36,0.92); }
+html.reduced .glass-strong { background: rgba(20,26,36,0.96); }
+html.reduced .docs-header { background: rgba(20,26,36,0.9); }
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  padding: 0 16px 24px;
+  transition: max-width 0.25s ease;
+}
+.app.docs-mode { max-width: 820px; }
+.app.docs-mode .header { display: none; }
+.app.docs-mode .console-fab { display: none !important; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 0 12px;
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(10,14,20,0.7);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  margin: 0 -16px; padding-left: 16px; padding-right: 16px;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+.brand-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(145deg, #0d2a1f, #0a1a14);
+  border: 1px solid rgba(0,214,143,0.35);
+  display: grid; place-items: center;
+  box-shadow: 0 0 20px var(--green-glow);
+}
+.brand-logo svg { width: 18px; height: 18px; }
+.brand span em { color: var(--green); font-style: normal; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.badge-connected {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  color: #7dffc4;
+  background: rgba(0,214,143,0.12);
+  border: 1px solid rgba(0,214,143,0.25);
+  padding: 6px 12px; border-radius: 999px;
+}
+.badge-connected .dot {
+  width: 7px; height: 7px; background: var(--green); border-radius: 50%;
+  box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  display: grid; place-items: center;
+  cursor: pointer; transition: 0.2s;
+  padding: 0; font-family: inherit;
+}
+.icon-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+.screen { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.35s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.auth-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px 0 40px; }
+.auth-card { padding: 32px 24px 28px; text-align: center; }
+.auth-icon {
+  width: 56px; height: 56px; margin: 0 auto 18px;
+  border-radius: 16px;
+  background: rgba(124,107,255,0.15);
+  border: 1px solid rgba(124,107,255,0.3);
+  display: grid; place-items: center; color: var(--purple);
+}
+.auth-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+.auth-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+.field-label {
+  display: block; text-align: left;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.phone-row {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.phone-row:focus-within {
+  border-color: rgba(0,214,143,0.5);
+  box-shadow: 0 0 0 3px rgba(0,214,143,0.1);
+}
+.phone-prefix {
+  padding: 14px 12px 14px 16px;
+  font-size: 15px; font-weight: 600; color: var(--muted);
+  border-right: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+.phone-row input {
+  flex: 1; border: 0; outline: 0;
+  background: transparent; color: var(--text);
+  font-size: 16px; font-weight: 500;
+  padding: 14px 16px; font-family: inherit;
+}
+.phone-row input::placeholder { color: #4a5568; }
+.otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 8px 0 20px; }
+.otp-boxes input {
+  width: 58px; height: 58px; text-align: center;
+  font-size: 22px; font-weight: 700;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0,0,0,0.35);
+  color: var(--text); outline: 0; font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.otp-boxes input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124,107,255,0.2);
+}
+.otp-hint { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%; padding: 15px 20px;
+  border: 0; border-radius: 14px;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  color: #03140e; box-shadow: 0 8px 28px var(--green-glow);
+}
+.btn-purple {
+  background: linear-gradient(135deg, #7c6bff, #5b4cdb);
+  color: #fff; box-shadow: 0 8px 28px rgba(124,107,255,0.3);
+}
+.btn-ghost { background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; margin-top: 14px; padding: 10px; }
+.btn-ghost:hover { color: var(--text); }
+.btn-sm { width: auto; padding: 10px 16px; font-size: 13px; border-radius: 10px; }
+.btn-outline { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text); }
+.btn-danger-soft { background: rgba(255,92,108,0.1); border: 1px solid rgba(255,92,108,0.25); color: #ff8a96; }
+.btn-purple-soft { background: rgba(124,107,255,0.12); border: 1px solid rgba(124,107,255,0.25); color: #b0a6ff; }
+
+.error-msg {
+  margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+  background: rgba(255,92,108,0.12);
+  border: 1px solid rgba(255,92,108,0.3);
+  color: #ff8a96; font-size: 12px; font-weight: 500;
+  display: none; text-align: left;
+}
+.error-msg.show { display: block; }
+.loading-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #03140e; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.token-card { padding: 18px; margin-bottom: 16px; }
+.token-block { margin-bottom: 14px; }
+.token-block:last-of-type { margin-bottom: 12px; }
+.token-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.token-box { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; }
+.token-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; line-height: 1.55; color: #a8b8c8;
+  word-break: break-all;
+  max-height: 52px; overflow: hidden; transition: max-height 0.3s;
+}
+.token-text.expanded { max-height: 300px; }
+.token-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+.token-toggle {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  background: none; border: 0; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 4px;
+}
+.token-toggle:hover { color: var(--text); }
+.copy-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--muted); cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s;
+}
+.copy-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.token-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #7dffc4; margin-bottom: 14px; }
+.token-status .dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 6px var(--green); }
+.token-btns { display: flex; gap: 8px; }
+.token-btns .btn { flex: 1; }
+
+.menu-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.menu-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 14px 8px; border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: 0.2s;
+}
+.menu-tab svg { width: 20px; height: 20px; }
+.menu-tab:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.menu-tab.active {
+  background: linear-gradient(135deg, rgba(0,214,143,0.2), rgba(0,179,119,0.12));
+  border-color: rgba(0,214,143,0.4); color: var(--green);
+  box-shadow: 0 4px 20px var(--green-glow);
+}
+.menu-tab.active[data-tab="history"] {
+  background: linear-gradient(135deg, rgba(15,20,30,0.9), rgba(20,28,40,0.9));
+  border-color: rgba(255,255,255,0.2); color: var(--text); box-shadow: var(--shadow);
+}
+.menu-tab.active[data-tab="payouts"] {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--glass-border2); color: var(--text); box-shadow: none;
+}
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+.panel-card { padding: 18px; }
+.panel-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title .count {
+  font-size: 11px; background: rgba(255,255,255,0.08);
+  padding: 3px 10px; border-radius: 999px;
+  color: var(--muted); font-weight: 600;
+  letter-spacing: 0; text-transform: none;
+}
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+.empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.4; }
+
+.qris-form .field { margin-bottom: 14px; }
+.qris-form input, .qris-form textarea {
+  width: 100%; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 13px 14px; color: var(--text);
+  font-size: 14px; font-family: inherit; outline: 0;
+  transition: border-color 0.2s;
+}
+.qris-form input:focus, .qris-form textarea:focus { border-color: rgba(0,214,143,0.5); }
+.qris-form textarea { min-height: 72px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
+.drop-zone {
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 28px 16px;
+  text-align: center; color: var(--muted); font-size: 12px;
+  cursor: pointer; transition: 0.2s; margin-bottom: 14px;
+  display: block;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.05);
+  color: var(--green);
+}
+.drop-zone svg { width: 28px; height: 28px; margin-bottom: 8px; opacity: 0.5; }
+.drop-zone.loading { pointer-events: none; opacity: 0.6; }
+.qris-result { margin-top: 16px; text-align: center; display: none; }
+.qris-result.show { display: block; }
+.qris-result img { max-width: 220px; border-radius: 12px; background: #fff; padding: 12px; margin-bottom: 12px; }
+.qris-result .amount { font-size: 20px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+.qris-status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; margin-top: 8px;
+}
+.qris-status-badge.pending { background: rgba(255,159,67,0.15); color: var(--orange); border: 1px solid rgba(255,159,67,0.3); }
+.qris-status-badge.paid { background: rgba(0,214,143,0.15); color: var(--green); border: 1px solid rgba(0,214,143,0.3); }
+
+.qris-active-card {
+  display: none;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(0,214,143,0.1), rgba(0,179,119,0.04));
+  border: 1px solid rgba(0,214,143,0.3);
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+.qris-active-row { display: flex; align-items: center; gap: 12px; }
+.qris-active-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(0,214,143,0.2);
+  border: 1px solid rgba(0,214,143,0.4);
+  display: grid; place-items: center;
+  color: var(--green); font-weight: 800; flex-shrink: 0;
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  text-align: left; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding: 0 0 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.data-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: 0; }
+.status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.status-pill.paid, .status-pill.settlement, .status-pill.success { background: rgba(0,214,143,0.15); color: var(--green); }
+.status-pill.pending { background: rgba(255,159,67,0.15); color: var(--orange); }
+
+.profile-header { display: flex; align-items: center; gap: 14px; padding: 20px; margin-bottom: 14px; }
+.profile-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #0d2a1f, #0a1a14);
+  border: 2px solid rgba(0,214,143,0.4);
+  display: grid; place-items: center;
+  font-size: 24px; font-weight: 800; color: var(--green); flex-shrink: 0;
+}
+.profile-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 3px; word-break: break-word; }
+.profile-sub { font-size: 12px; color: var(--muted); word-break: break-word; }
+.profile-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+.profile-item {
+  padding: 14px 16px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; min-width: 0;
+}
+.profile-item .lbl {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.profile-item .val { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-word; }
+
+.qris-upload-zone {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 16px; padding: 40px 20px;
+  text-align: center; color: var(--muted);
+  cursor: pointer; transition: 0.2s;
+  background: rgba(0,0,0,0.2);
+}
+.qris-upload-zone:hover, .qris-upload-zone.dragover {
+  border-color: rgba(0,214,143,0.5);
+  background: rgba(0,214,143,0.05); color: var(--green);
+}
+.qris-upload-zone.loading { pointer-events: none; opacity: 0.6; }
+.qris-upload-zone svg { width: 44px; height: 44px; opacity: 0.6; }
+.qris-upload-preview {
+  padding: 16px; background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; display: flex; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+}
+.qris-upload-preview:hover { border-color: rgba(0,214,143,0.4); }
+.qris-upload-preview.dragover { border-color: var(--green); background: rgba(0,214,143,0.05); }
+.qris-upload-preview.loading { pointer-events: none; opacity: 0.5; }
+.qris-upload-preview img { width: 220px; height: 220px; background: #fff; padding: 12px; border-radius: 12px; object-fit: contain; }
+.qris-upload-actions { display: flex; gap: 8px; margin-top: 12px; }
+.qris-upload-actions .btn { flex: 1; }
+.qris-string-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin: 18px 0 8px;
+}
+.qris-string-box {
+  font-family: ui-monospace, monospace;
+  font-size: 10px; line-height: 1.6; color: #a8b8c8;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 12px;
+  word-break: break-all; max-height: 100px; overflow-y: auto;
+  cursor: default; user-select: text;
+}
+.qris-empty { text-align: center; padding: 30px 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.storage-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+.storage-badge.redis { background: rgba(0,214,143,0.12); color: #7dffc4; border: 1px solid rgba(0,214,143,0.25); }
+.storage-badge.local { background: rgba(255,159,67,0.12); color: #ffc78a; border: 1px solid rgba(255,159,67,0.25); }
+
+.apikey-input-row { display: flex; gap: 8px; align-items: stretch; }
+.apikey-input-row input {
+  flex: 1; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 13px 14px;
+  color: var(--text); font-size: 14px; font-family: inherit; outline: 0;
+}
+.apikey-input-row input:focus { border-color: rgba(0,214,143,0.5); }
+.apikey-box {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 12px;
+}
+.apikey-value {
+  flex: 1; font-family: ui-monospace, monospace;
+  font-size: 11px; line-height: 1.5;
+  color: #a8b8c8; word-break: break-all; min-width: 0;
+}
+.apikey-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.apikey-icon-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--muted); cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s; padding: 0;
+}
+.apikey-icon-btn:hover { color: var(--green); border-color: rgba(0,214,143,0.4); }
+.apikey-meta {
+  font-size: 11px; color: var(--muted);
+  margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.apikey-help {
+  font-size: 11px; color: var(--muted);
+  line-height: 1.55; margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(107,138,255,0.06);
+  border: 1px solid rgba(107,138,255,0.2);
+  border-radius: 10px;
+}
+.apikey-help code {
+  font-family: ui-monospace, monospace;
+  color: #7dffc4; font-size: 10.5px;
+  background: rgba(0,0,0,0.35);
+  padding: 1px 5px; border-radius: 4px;
+}
+.apikey-warn {
+  font-size: 11px; color: #ffc78a;
+  padding: 8px 10px; margin-top: 8px;
+  background: rgba(255,159,67,0.08);
+  border: 1px solid rgba(255,159,67,0.25);
+  border-radius: 8px; line-height: 1.5;
+}
+
+.console-fab {
+  position: fixed; bottom: 20px; right: 16px; z-index: 40;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-radius: 999px;
+  background: rgba(15,20,30,0.9);
+  border: 1px solid var(--glass-border2);
+  color: var(--text); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  transition: 0.2s;
+}
+.console-fab:hover { border-color: var(--green); color: var(--green); }
+.console-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 480px; margin: 0 auto; z-index: 50;
+  max-height: 55vh; display: none; flex-direction: column;
+  border-radius: 20px 20px 0 0; overflow: hidden;
+}
+.console-drawer.open { display: flex; }
+.console-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(10,14,20,0.95);
+  gap: 10px;
+}
+.console-head h3 {
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--green); flex: 1;
+}
+.console-head-actions { display: flex; gap: 6px; }
+.console-head-actions .btn {
+  margin: 0; padding: 6px 12px;
+  font-size: 11px; font-weight: 700; border-radius: 8px;
+  width: auto; border: 1px solid;
+}
+.console-body {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  background: rgba(8,11,16,0.98);
+  font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+}
+.console-item {
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.console-item .time { color: var(--muted); white-space: nowrap; }
+.console-item .method { color: var(--green); font-weight: 600; }
+.console-item .status-code { margin-left: auto; font-weight: 700; color: var(--green); }
+.console-item .status-code.err { color: var(--red); }
+.console-item .copy-json {
+  font-size: 10px; color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px; padding: 2px 6px;
+  cursor: pointer; margin-top: 4px; display: inline-block;
+}
+.console-empty { text-align: center; padding: 30px; color: var(--muted); font-size: 12px; }
+
+.toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 60;
+  background: #e8fff5; color: #03140e;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none;
+  transition: 0.25s;
+  white-space: nowrap; max-width: 90vw;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============ DOCS (REDESIGN) ============ */
+.docs-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 12px 16px;
+  background: rgba(15,20,30,0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  margin-top: 16px; margin-bottom: 20px;
+  position: sticky; top: 8px; z-index: 20;
+}
+.docs-header .brand { font-size: 15px; }
+.docs-header .brand-logo { width: 32px; height: 32px; }
+.docs-header .brand-logo svg { width: 16px; height: 16px; }
+
+/* HERO */
+.docs-hero {
+  position: relative;
+  padding: 28px 24px;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(0,214,143,0.08), rgba(124,107,255,0.05)),
+    rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.docs-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,214,143,0.15), transparent 65%);
+  pointer-events: none;
+}
+.docs-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(0,214,143,0.15);
+  border: 1px solid rgba(0,214,143,0.3);
+  color: #7dffc4;
+  margin-bottom: 14px;
+  position: relative;
+}
+.docs-hero-badge .pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+}
+.docs-hero h1 {
+  font-size: 32px; font-weight: 800;
+  letter-spacing: -0.035em; line-height: 1.15;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 20%, #7dffc4 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+.docs-hero p {
+  color: var(--muted); font-size: 14px;
+  line-height: 1.6; max-width: 560px;
+  position: relative;
+}
+.docs-hero p strong { color: var(--text); font-weight: 700; }
+.docs-hero p code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: #7dffc4;
+  background: rgba(0,214,143,0.1);
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid rgba(0,214,143,0.2);
+}
+
+.docs-base-url {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 16px; padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,214,143,0.25);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; color: #7dffc4;
+  position: relative;
+  flex-wrap: wrap;
+}
+.docs-base-url .lbl {
+  font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); flex-shrink: 0;
+}
+.docs-base-url .url {
+  flex: 1; min-width: 0;
+  word-break: break-all; color: #7dffc4;
+}
+.docs-base-url .copy-url {
+  width: 28px; height: 28px;
+  border-radius: 8px; flex-shrink: 0;
+  border: 1px solid rgba(0,214,143,0.3);
+  background: rgba(0,214,143,0.1);
+  color: #7dffc4; cursor: pointer;
+  display: grid; place-items: center;
+  transition: 0.15s;
+}
+.docs-base-url .copy-url:hover { background: rgba(0,214,143,0.2); }
+
+/* QUICK NAV */
+.docs-nav {
+  display: flex; gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.docs-nav::-webkit-scrollbar { display: none; }
+.docs-nav-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+  font-size: 12px; font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: 0.2s;
+  cursor: pointer;
+}
+.docs-nav-pill:hover {
+  color: var(--green);
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.08);
+}
+.docs-nav-pill .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; opacity: 0.7;
+}
+
+/* AUTH CARDS */
+.docs-auth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.docs-auth-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+.docs-auth-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,214,143,0.15);
+  border: 1px solid rgba(0,214,143,0.3);
+  color: var(--green);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 800;
+  flex-shrink: 0;
+}
+.docs-auth-card .name {
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 3px;
+}
+.docs-auth-card code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; color: #7dffc4;
+  background: rgba(0,0,0,0.4);
+  padding: 2px 6px; border-radius: 5px;
+  word-break: break-all;
+}
+
+/* SECTIONS */
+.docs-section { margin-bottom: 28px; scroll-margin-top: 80px; }
+.docs-section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.docs-section-title::before {
+  content: ''; width: 4px; height: 16px;
+  border-radius: 2px; background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+}
+.docs-section-title .docs-count {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  padding: 3px 8px; border-radius: 999px;
+  text-transform: none;
+}
+
+/* ENDPOINT */
+.docs-endpoint {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.docs-endpoint:hover {
+  border-color: var(--glass-border2);
+  background: rgba(255,255,255,0.05);
+}
+.docs-endpoint.open {
+  border-color: rgba(0,214,143,0.3);
+  background: rgba(0,214,143,0.02);
+}
+.docs-endpoint-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer; user-select: none;
+}
+.docs-method {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 800;
+  padding: 4px 9px; border-radius: 6px;
+  letter-spacing: 0.06em; flex-shrink: 0;
+  background: rgba(0,214,143,0.15);
+  color: var(--green);
+  border: 1px solid rgba(0,214,143,0.3);
+  min-width: 48px;
+  text-align: center;
+}
+.docs-method.post {
+  background: rgba(107,138,255,0.15);
+  color: var(--blue);
+  border-color: rgba(107,138,255,0.3);
+}
+.docs-method.del {
+  background: rgba(255,92,108,0.15);
+  color: var(--red);
+  border-color: rgba(255,92,108,0.3);
+}
+.docs-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 500;
+  color: var(--text);
+  flex: 1; word-break: break-all;
+}
+.docs-chevron {
+  color: var(--muted);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.docs-endpoint.open .docs-chevron { transform: rotate(180deg); color: var(--green); }
+
+.docs-endpoint-desc {
+  font-size: 12px; color: var(--muted);
+  padding: 0 16px 12px 74px;
+  margin-top: -6px;
+  line-height: 1.55;
+}
+.docs-endpoint-body {
+  display: none;
+  padding: 4px 16px 18px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 8px;
+  font-size: 13px;
+}
+.docs-endpoint.open .docs-endpoint-body {
+  display: block;
+  animation: fadeIn 0.25s ease;
+}
+.docs-params-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+  margin: 14px 0 8px;
+}
+.docs-params-title svg { width: 12px; height: 12px; }
+.docs-params { display: flex; flex-direction: column; gap: 6px; }
+.docs-param {
+  display: flex; gap: 10px;
+  padding: 9px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 9px; font-size: 12.5px;
+  align-items: center; flex-wrap: wrap;
+}
+.docs-param .name {
+  font-family: 'JetBrains Mono', monospace;
+  color: #b0a6ff; font-weight: 600;
+  flex-shrink: 0; min-width: 110px;
+}
+.docs-param .type {
+  color: var(--orange);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; flex-shrink: 0;
+}
+.docs-param .req {
+  color: #ff8a96;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px;
+  background: rgba(255,92,108,0.15);
+  border: 1px solid rgba(255,92,108,0.3);
+  border-radius: 4px; flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.docs-param .opt {
+  color: var(--muted);
+  font-size: 9px; font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px; flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.docs-param .desc {
+  color: var(--muted); flex: 1;
+  min-width: 180px; font-size: 12px;
+}
+
+/* CODE BLOCK */
+.docs-code {
+  position: relative;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.docs-code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--glass-border);
+}
+.docs-code-head .dots {
+  display: flex; gap: 5px;
+}
+.docs-code-head .dots span {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+.docs-code-head .dots span:first-child { background: rgba(255,92,108,0.6); }
+.docs-code-head .dots span:nth-child(2) { background: rgba(255,159,67,0.6); }
+.docs-code-head .dots span:nth-child(3) { background: rgba(0,214,143,0.6); }
+.docs-code-head .label {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.docs-code-head .copy {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.15s;
+}
+.docs-code-head .copy:hover {
+  color: var(--green);
+  border-color: rgba(0,214,143,0.4);
+  background: rgba(0,214,143,0.1);
+}
+.docs-code pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px; line-height: 1.7;
+  color: #a8b8c8;
+  white-space: pre;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+.tk-key { color: #6b8aff; }
+.tk-str { color: #7dffc4; }
+.tk-num { color: #ff9f43; }
+.tk-bool { color: #b0a6ff; }
+.tk-comment { color: #5a6a7a; font-style: italic; }
+.tk-cmd { color: #ffc78a; font-weight: 600; }
+
+/* NOTES */
+.docs-note {
+  display: flex; gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  margin-top: 12px;
+  line-height: 1.6;
+  align-items: flex-start;
+}
+.docs-note .ic {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.docs-note.info {
+  background: rgba(107,138,255,0.08);
+  border: 1px solid rgba(107,138,255,0.25);
+  color: #a5b8ff;
+}
+.docs-note.warn {
+  background: rgba(255,159,67,0.08);
+  border: 1px solid rgba(255,159,67,0.25);
+  color: #ffc78a;
+}
+.docs-note.success {
+  background: rgba(0,214,143,0.08);
+  border: 1px solid rgba(0,214,143,0.25);
+  color: #7dffc4;
+}
+.docs-note strong { color: inherit; font-weight: 700; }
+.docs-note code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: rgba(0,0,0,0.35);
+  padding: 1px 6px;
+  border-radius: 5px;
+  color: #7dffc4;
+}
+
+/* FOOTER */
+.docs-footer {
+  text-align: center;
+  padding: 24px 0 12px;
+  margin-top: 32px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.docs-footer a {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 700;
+}
+.docs-footer a:hover { text-decoration: underline; }
+.docs-footer .ver {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.7;
+  display: block;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .docs-hero { padding: 22px 18px; }
+  .docs-hero h1 { font-size: 26px; }
+  .docs-endpoint-desc { padding-left: 16px; }
+  .docs-param .name { min-width: 0; }
+  .docs-header { flex-direction: column; align-items: stretch; padding: 12px; }
+  .docs-header .btn { width: 100%; }
+  .qris-upload-preview img { width: 180px; height: 180px; }
+}
+
+/* =========================================================
+   NEUBRUTALISM DESIGN SYSTEM — GoMerchPro
+   Override layer: preserves existing EJS/JS hooks and IDs.
+   ========================================================= */
+:root {
+  color-scheme: light;
+  --bg: #f7f4e8;
+  --glass: #fffdf5;
+  --glass-border: #171717;
+  --glass-border2: #171717;
+  --text: #171717;
+  --muted: #57534e;
+  --green: #86efac;
+  --green2: #4ade80;
+  --green-glow: transparent;
+  --purple: #c4b5fd;
+  --blue: #93c5fd;
+  --red: #fca5a5;
+  --orange: #fcd34d;
+  --radius: 8px;
+  --radius-sm: 5px;
+  --shadow: 5px 5px 0 #171717;
+  --nb-black: #171717;
+  --nb-cream: #f7f4e8;
+  --nb-yellow: #fde047;
+  --nb-blue: #93c5fd;
+  --nb-green: #86efac;
+  --nb-pink: #fda4af;
+}
+html, body { background: var(--bg) !important; color: var(--text) !important; }
+body { font-family: 'Inter', system-ui, sans-serif; }
+body::before, body::after { display: none !important; }
+* { scrollbar-color: #171717 #e7e2d4; }
+.app { max-width: 1180px; padding: 0 24px 40px; }
+.app.docs-mode { max-width: 1180px; }
+.header {
+  background: var(--bg) !important; backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important; border-bottom: 2px solid var(--nb-black);
+  margin: 0 -24px 24px; padding: 16px 24px; position: sticky;
+}
+.brand { letter-spacing: -.04em; }
+.brand-logo { background: var(--nb-yellow) !important; border: 2px solid var(--nb-black) !important; border-radius: 5px !important; box-shadow: 3px 3px 0 var(--nb-black) !important; }
+.brand-logo svg { color: var(--nb-black) !important; }
+.brand span em { color: #166534 !important; }
+.badge-connected, .storage-badge, .token-status, .qris-status-badge {
+  color: var(--nb-black) !important; background: var(--nb-green) !important;
+  border: 2px solid var(--nb-black) !important; border-radius: 4px !important;
+  box-shadow: 2px 2px 0 var(--nb-black);
+}
+.badge-connected .dot, .token-status .dot { box-shadow: none !important; }
+.glass, .glass-strong, .panel-card, .auth-card, .token-card, .qris-active-card,
+.docs-auth-card, .docs-endpoint, .docs-code, .apikey-box, .profile-item,
+.profile-header, .qris-upload-zone, .qris-upload-preview, .console-drawer,
+.console-empty, .empty-state, .info, .warn, .error-msg, .success, .pending {
+  background: #fffdf5 !important; color: var(--nb-black) !important;
+  border: 2px solid var(--nb-black) !important; border-radius: 7px !important;
+  box-shadow: 4px 4px 0 var(--nb-black) !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+.glass-strong { background: #fffdf5 !important; }
+.auth-wrap { max-width: 560px; width: 100%; margin: 0 auto; }
+.auth-card { padding: 32px 28px !important; text-align: left !important; }
+.auth-icon { background: var(--nb-yellow) !important; border: 2px solid var(--nb-black) !important; border-radius: 6px !important; box-shadow: 3px 3px 0 var(--nb-black) !important; }
+.auth-card h1 { font-size: clamp(24px, 4vw, 34px) !important; letter-spacing: -.05em !important; }
+.auth-card .sub, .desc, .sub, .muted, .field-label { color: #57534e !important; }
+.field-label, .label, .lbl { font-weight: 800 !important; color: var(--nb-black) !important; }
+input, textarea, select, .field input, .phone-row, .otp-boxes input, .apikey-input-row,
+.token-box, .qris-string-box, .docs-base-url, .docs-param, .docs-note {
+  color: var(--nb-black) !important; background: #fff !important;
+  border: 2px solid var(--nb-black) !important; border-radius: 4px !important;
+  box-shadow: 2px 2px 0 var(--nb-black) !important; outline-color: #2563eb;
+}
+input::placeholder, textarea::placeholder { color: #78716c !important; opacity: 1; }
+input:focus, textarea:focus, select:focus { border-color: #1d4ed8 !important; box-shadow: 3px 3px 0 #1d4ed8 !important; }
+.btn, button, .icon-btn, .btn-primary, .btn-purple, .btn-outline, .btn-ghost,
+.btn-danger-soft, .btn-purple-soft, .menu-tab, .docs-nav-pill, .copy-btn, .apikey-icon-btn {
+  border: 2px solid var(--nb-black) !important; border-radius: 4px !important;
+  font-weight: 800 !important; letter-spacing: -.01em; box-shadow: 3px 3px 0 var(--nb-black) !important;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease !important;
+}
+.btn-primary, .btn:not(.btn-outline):not(.btn-ghost):not(.btn-danger-soft), .btn-purple {
+  background: var(--nb-yellow) !important; color: var(--nb-black) !important;
+}
+.btn-purple, .btn-purple-soft { background: var(--nb-blue) !important; color: var(--nb-black) !important; }
+.btn-outline, .btn-ghost, .icon-btn, .apikey-icon-btn { background: #fffdf5 !important; color: var(--nb-black) !important; }
+.btn-danger-soft { background: var(--nb-pink) !important; color: var(--nb-black) !important; }
+.btn:hover, button:hover, .icon-btn:hover, .menu-tab:hover, .docs-nav-pill:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--nb-black) !important; }
+.btn:active, button:active, .icon-btn:active, .menu-tab:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--nb-black) !important; }
+button:disabled, .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.menu-tabs { display: flex; flex-wrap: wrap; gap: 10px !important; }
+.menu-tab { background: #fffdf5 !important; color: var(--nb-black) !important; }
+.menu-tab.active, .menu-tab[aria-selected="true"] { background: var(--nb-yellow) !important; }
+.panel-card { padding: 22px !important; margin-bottom: 16px; }
+.panel-title { color: var(--nb-black) !important; font-weight: 900 !important; letter-spacing: -.04em; }
+.panel-title .count { background: var(--nb-blue) !important; color: var(--nb-black) !important; border: 2px solid var(--nb-black); border-radius: 4px !important; }
+.token-card, .token-block { background: #fffdf5 !important; border: 2px solid var(--nb-black) !important; border-radius: 6px !important; }
+.token-box, .token-text, pre, code { font-family: 'JetBrains Mono', monospace !important; }
+.token-box { overflow-wrap: anywhere; }
+.token-label, .docs-code-head .label { color: #57534e !important; }
+.token-btns, .token-actions, .apikey-actions { gap: 10px !important; }
+.qris-result, .qris-form, .qris-active-row { border-radius: 6px !important; }
+.qris-result img, .qris-upload-preview img { border: 2px solid var(--nb-black) !important; border-radius: 4px !important; box-shadow: 3px 3px 0 var(--nb-black); }
+.qris-active-icon, .profile-avatar { background: var(--nb-blue) !important; border: 2px solid var(--nb-black) !important; border-radius: 5px !important; box-shadow: 3px 3px 0 var(--nb-black); }
+.status-pill, .docs-method, .docs-count, .docs-hero-badge, .docs-nav-pill .num {
+  border: 2px solid var(--nb-black) !important; border-radius: 4px !important;
+  color: var(--nb-black) !important; font-weight: 900 !important; box-shadow: 2px 2px 0 var(--nb-black);
+}
+.status-pill.success, .success { background: var(--nb-green) !important; }
+.status-pill.pending, .pending { background: var(--nb-yellow) !important; }
+.status-pill.error, .error-msg { background: var(--nb-pink) !important; }
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 2px solid var(--nb-black); background: #fffdf5; }
+.data-table th { background: var(--nb-yellow) !important; color: var(--nb-black) !important; font-weight: 900 !important; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+.data-table th, .data-table td { border-bottom: 1px solid #171717 !important; padding: 12px 10px !important; }
+.data-table tr:last-child td { border-bottom: 0 !important; }
+.empty-state { padding: 28px 20px !important; }
+.docs-header { background: var(--bg) !important; border-bottom: 2px solid var(--nb-black) !important; backdrop-filter: none !important; }
+.docs-hero { background: var(--nb-yellow) !important; color: var(--nb-black) !important; border: 2px solid var(--nb-black) !important; border-radius: 7px !important; box-shadow: 5px 5px 0 var(--nb-black) !important; }
+.docs-hero h1, .docs-hero p, .docs-hero p strong { color: var(--nb-black) !important; }
+.docs-hero p code { background: #fffdf5 !important; color: var(--nb-black) !important; border: 1px solid var(--nb-black); }
+.docs-base-url { box-shadow: 3px 3px 0 var(--nb-black) !important; }
+.docs-nav-pill { background: #fffdf5 !important; color: var(--nb-black) !important; }
+.docs-nav-pill.active, .docs-nav-pill:hover { background: var(--nb-blue) !important; }
+.docs-section-title { color: var(--nb-black) !important; font-weight: 900 !important; }
+.docs-section-title::before { background: var(--nb-black) !important; }
+.docs-endpoint { box-shadow: 3px 3px 0 var(--nb-black) !important; }
+.docs-endpoint.open { background: #fffdf5 !important; border-color: var(--nb-black) !important; }
+.docs-method { background: var(--nb-green) !important; }
+.docs-method.post { background: var(--nb-blue) !important; }
+.docs-method.del { background: var(--nb-pink) !important; }
+.docs-path, .docs-endpoint-desc, .docs-params-title, .docs-param .name, .docs-param .desc { color: var(--nb-black) !important; }
+.docs-code { overflow: hidden; }
+.docs-code-head { background: #e7e2d4 !important; border-bottom: 2px solid var(--nb-black) !important; }
+.docs-code-head .dots span { border: 1px solid var(--nb-black); }
+.docs-code pre { background: #fffdf5 !important; color: #171717 !important; overflow-x: auto; }
+.docs-note.info { background: var(--nb-blue) !important; }
+.docs-note.warn { background: var(--nb-yellow) !important; }
+.console-fab { background: var(--nb-yellow) !important; color: var(--nb-black) !important; border: 2px solid var(--nb-black) !important; border-radius: 5px !important; box-shadow: 4px 4px 0 var(--nb-black) !important; backdrop-filter: none !important; }
+.console-drawer { background: #fffdf5 !important; }
+.console-head { background: var(--nb-yellow) !important; border-bottom: 2px solid var(--nb-black) !important; }
+.console-head, .console-head * { color: var(--nb-black) !important; }
+.toast { background: var(--nb-black) !important; color: #fffdf5 !important; border: 2px solid var(--nb-black) !important; border-radius: 4px !important; box-shadow: 4px 4px 0 #a8a29e !important; }
+.loading-spinner { border-color: #d6d3d1 !important; border-top-color: var(--nb-black) !important; }
+a { color: #1d4ed8; text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid #2563eb !important; outline-offset: 3px; }
+@media (min-width: 768px) {
+  .app { padding-left: 30px; padding-right: 30px; }
+  .header { margin-left: -30px; margin-right: -30px; padding-left: 30px; padding-right: 30px; }
+  .screen.active#dashboard { display: block; }
+  #dashboard .menu-tabs { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); }
+  #dashboard .panel-card { padding: 24px !important; }
+  .auth-wrap { padding: 48px 0; }
+}
+@media (max-width: 600px) {
+  .app { padding: 0 14px 28px; }
+  .header { margin-left: -14px; margin-right: -14px; padding: 13px 14px; }
+  .brand { font-size: 15px; }
+  .badge-connected { padding: 5px 8px; font-size: 10px; }
+  .auth-card { padding: 24px 18px !important; }
+  .panel-card { padding: 16px !important; }
+  .menu-tabs { gap: 8px !important; }
+  .menu-tab { flex: 1 1 calc(50% - 8px); }
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .docs-hero { padding: 22px 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+
+
+/* REAL LAYOUT REDESIGN — Neubrutalism Workspace */
+:root {
+  --bg: #f5f1e6 !important;
+  --glass: #fffdf5 !important;
+  --glass-border: #171717 !important;
+  --glass-border2: #171717 !important;
+  --text: #171717 !important;
+  --muted: #57534e !important;
+  --green: #86efac !important;
+  --green2: #4ade80 !important;
+  --purple: #c4b5fd !important;
+  --blue: #93c5fd !important;
+  --red: #fda4af !important;
+  --orange: #fde047 !important;
+  --radius: 6px !important;
+  --radius-sm: 4px !important;
+  --shadow: 5px 5px 0 #171717 !important;
+}
+html, body { background: #f5f1e6 !important; color: #171717 !important; }
+body { background-image: radial-gradient(#171717 0.65px, transparent 0.65px) !important; background-size: 16px 16px !important; }
+body::before, body::after { display:none !important; }
+.app { width: min(1440px, 100%); max-width: 1440px !important; padding: 0 34px 44px !important; }
+.header { margin: 0 -34px 28px !important; padding: 18px 34px !important; background: #f5f1e6 !important; border-bottom: 3px solid #171717 !important; box-shadow: 0 4px 0 rgba(23,23,23,.08); backdrop-filter:none !important; }
+.brand { font-size: 20px !important; letter-spacing: -.06em !important; }
+.brand-logo { width: 42px !important; height: 42px !important; background: #fde047 !important; border: 3px solid #171717 !important; border-radius: 4px !important; box-shadow: 4px 4px 0 #171717 !important; }
+.brand-logo svg { stroke: #171717 !important; }
+#screen-dashboard.active { display:grid !important; grid-template-columns: 290px minmax(0,1fr); grid-template-areas: "intro intro" "tokens tabs" "tokens content"; gap: 0 26px; align-content:start; }
+.dashboard-intro { grid-area:intro; display:flex; justify-content:space-between; align-items:center; gap:24px; padding:30px 34px; margin:0 0 26px; background:#fde047; border:3px solid #171717; box-shadow:7px 7px 0 #171717; position:relative; overflow:hidden; }
+.dashboard-intro-copy { position:relative; z-index:1; }
+.dashboard-kicker { display:flex; align-items:center; gap:9px; font:800 11px/1.4 'JetBrains Mono',monospace; letter-spacing:.08em; margin-bottom:14px; }
+.dashboard-kicker-dot { display:inline-block; width:10px; height:10px; background:#86efac; border:2px solid #171717; }
+.dashboard-intro h1 { font-size:clamp(32px,4vw,54px); line-height:.98; letter-spacing:-.075em; font-weight:900; margin:0 0 12px; }
+.dashboard-intro h1 span { text-decoration:underline; text-decoration-thickness:4px; text-underline-offset:5px; }
+.dashboard-intro p { font-size:14px; line-height:1.6; font-weight:600; max-width:520px; color:#39352c; }
+.dashboard-intro-stamp { flex:0 0 112px; width:112px; height:112px; background:#93c5fd; border:3px solid #171717; box-shadow:5px 5px 0 #171717; display:flex; flex-direction:column; justify-content:center; align-items:center; transform:rotate(4deg); }
+.dashboard-intro-stamp span { font-size:38px; line-height:1; font-weight:900; letter-spacing:-.1em; }
+.dashboard-intro-stamp small { margin-top:8px; font:800 8px/1.2 'JetBrains Mono',monospace; text-align:center; letter-spacing:.1em; }
+#screen-dashboard > .token-card { grid-area:tokens; align-self:start; margin:0 !important; padding:20px !important; position:sticky; top:92px; }
+#screen-dashboard > .token-card::before { content:'MERCHANT / CREDENTIALS'; display:block; font:900 10px/1.4 'JetBrains Mono',monospace; letter-spacing:.08em; padding-bottom:14px; margin-bottom:16px; border-bottom:2px solid #171717; }
+#screen-dashboard .token-block { border:0 !important; box-shadow:none !important; padding:0 !important; margin:0 0 18px !important; background:transparent !important; }
+#screen-dashboard .token-label { font:800 10px/1.4 'JetBrains Mono',monospace !important; letter-spacing:.06em; text-transform:uppercase; }
+#screen-dashboard .token-box { display:block !important; padding:10px !important; }
+#screen-dashboard .token-text { font-size:11px !important; line-height:1.5; overflow-wrap:anywhere; }
+#screen-dashboard .token-actions { display:flex; justify-content:flex-start; margin-top:9px; }
+#screen-dashboard .token-status { margin:10px 0 14px !important; justify-content:center; }
+#screen-dashboard .token-btns { display:grid !important; grid-template-columns:1fr 1fr; }
+#screen-dashboard .menu-tabs { grid-area:tabs; display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)); align-self:start; margin:0 0 18px !important; gap:12px !important; }
+#screen-dashboard .menu-tab { min-height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; background:#fffdf5 !important; border:2px solid #171717 !important; box-shadow:4px 4px 0 #171717 !important; border-radius:4px !important; font-size:11px !important; letter-spacing:.06em; }
+#screen-dashboard .menu-tab svg { width:22px; height:22px; }
+#screen-dashboard .menu-tab.active { background:#93c5fd !important; transform:translate(-2px,-2px); box-shadow:6px 6px 0 #171717 !important; }
+#screen-dashboard > .panel { grid-area:content; min-width:0; }
+#screen-dashboard .panel-card { min-height:300px; padding:26px !important; background:#fffdf5 !important; border:3px solid #171717 !important; box-shadow:6px 6px 0 #171717 !important; border-radius:5px !important; }
+#screen-dashboard .panel-title { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:18px; margin-bottom:20px; border-bottom:2px solid #171717; font-size:24px !important; }
+#screen-dashboard .qris-form { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+#screen-dashboard .qris-result { margin-top:22px; }
+#screen-dashboard .data-table { min-width:560px; }
+.glass, .glass-strong, .panel-card, .auth-card, .token-card, .qris-active-card, .docs-auth-card, .docs-endpoint, .docs-code, .apikey-box, .profile-item, .profile-header, .qris-upload-zone, .qris-upload-preview, .console-drawer, .console-empty, .empty-state, .info, .warn, .error-msg, .success, .pending { background:#fffdf5 !important; color:#171717 !important; border:2px solid #171717 !important; border-radius:5px !important; box-shadow:4px 4px 0 #171717 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+.btn, button, .icon-btn, .btn-primary, .btn-purple, .btn-outline, .btn-ghost, .btn-danger-soft, .btn-purple-soft, .menu-tab, .docs-nav-pill, .copy-btn, .apikey-icon-btn { border:2px solid #171717 !important; border-radius:4px !important; box-shadow:3px 3px 0 #171717 !important; font-weight:800 !important; }
+.btn-primary, .btn:not(.btn-outline):not(.btn-ghost):not(.btn-danger-soft), .btn-purple { background:#fde047 !important; color:#171717 !important; }
+.btn-purple, .btn-purple-soft { background:#93c5fd !important; color:#171717 !important; }
+.btn-outline, .btn-ghost, .icon-btn, .apikey-icon-btn { background:#fffdf5 !important; color:#171717 !important; }
+.btn-danger-soft { background:#fda4af !important; color:#171717 !important; }
+input, textarea, select, .field input, .phone-row, .otp-boxes input, .apikey-input-row, .token-box, .qris-string-box, .docs-base-url, .docs-param, .docs-note { background:#fff !important; color:#171717 !important; border:2px solid #171717 !important; border-radius:4px !important; box-shadow:2px 2px 0 #171717 !important; }
+.badge-connected, .storage-badge, .token-status, .qris-status-badge { color:#171717 !important; background:#86efac !important; border:2px solid #171717 !important; border-radius:4px !important; box-shadow:2px 2px 0 #171717 !important; }
+.docs-header { background:#f5f1e6 !important; border-bottom:3px solid #171717 !important; }
+.docs-hero { background:#fde047 !important; border:3px solid #171717 !important; box-shadow:6px 6px 0 #171717 !important; border-radius:5px !important; }
+.console-fab { background:#fde047 !important; color:#171717 !important; border:2px solid #171717 !important; box-shadow:4px 4px 0 #171717 !important; }
+.toast { background:#171717 !important; color:#fffdf5 !important; border:2px solid #171717 !important; border-radius:4px !important; box-shadow:4px 4px 0 #a8a29e !important; }
+@media (min-width:768px) {
+  .app { padding-left:34px !important; padding-right:34px !important; }
+  .auth-wrap { max-width:620px !important; padding:60px 0 !important; }
+  .auth-card { padding:38px !important; }
+}
+@media (max-width:900px) {
+  .app { padding-left:20px !important; padding-right:20px !important; }
+  .header { margin-left:-20px !important; margin-right:-20px !important; padding-left:20px !important; padding-right:20px !important; }
+  #screen-dashboard.active { grid-template-columns:240px minmax(0,1fr); gap:0 18px; }
+  .dashboard-intro { padding:24px; }
+}
+@media (max-width:680px) {
+  .app { padding:0 14px 28px !important; }
+  .header { margin:0 -14px 20px !important; padding:13px 14px !important; }
+  #screen-dashboard.active { display:flex !important; flex-direction:column; gap:0; }
+  .dashboard-intro { padding:22px 18px; margin-bottom:20px; box-shadow:5px 5px 0 #171717; }
+  .dashboard-intro h1 { font-size:34px; }
+  .dashboard-intro p { font-size:12px; }
+  .dashboard-intro-stamp { flex-basis:70px; width:70px; height:70px; box-shadow:3px 3px 0 #171717; }
+  .dashboard-intro-stamp span { font-size:26px; }
+  .dashboard-intro-stamp small { font-size:6px; }
+  #screen-dashboard > .token-card { position:static; order:2; margin-bottom:18px !important; }
+  #screen-dashboard .menu-tabs { order:1; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px !important; margin-bottom:18px !important; }
+  #screen-dashboard .menu-tab { min-height:58px; font-size:9px !important; padding:8px 4px; }
+  #screen-dashboard > .panel { order:3; }
+  #screen-dashboard .panel-card { padding:18px !important; }
+  #screen-dashboard .panel-title { font-size:20px !important; }
+  .auth-wrap { padding:24px 0 !important; }
+  .auth-card { padding:24px 18px !important; }
+}
+
+
+
+/* =========================================================
+   GOMERCHPRO / WORKSPACE V3 — structural responsive redesign
+   SVG-first iconography, no glassmorphism, no emoji icons.
+   Existing IDs and event handlers intentionally preserved.
+   ========================================================= */
+:root{
+ --bg:#f4f0e5;--glass:#fffdf6;--glass-border:#191919;--glass-border2:#191919;
+ --text:#171717;--muted:#68665f;--green:#70e6a5;--green2:#31b979;--green-glow:transparent;
+ --purple:#ffdf45;--blue:#9bc8ff;--red:#ff8585;--orange:#ffb66b;--radius:5px;--radius-sm:4px;
+ --shadow:5px 5px 0 #171717;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;overflow-x:hidden}
+body:before{display:none!important}body:after{background-image:linear-gradient(#1717170b 1px,transparent 1px),linear-gradient(90deg,#1717170b 1px,transparent 1px);background-size:24px 24px;mask-image:none;opacity:.4}
+.glass,.glass-strong{background:var(--glass)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:2px solid #191919!important;border-radius:5px!important;box-shadow:5px 5px 0 #191919!important}
+.app{width:100%;max-width:none!important;min-height:100dvh;margin:0;padding:0 0 36px;display:block}
+.header{position:sticky;top:0;z-index:80;margin:0;padding:12px clamp(16px,3vw,44px);min-height:72px;background:#f4f0e5!important;border-bottom:2px solid #191919;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.brand{gap:12px;font-size:19px;letter-spacing:-.06em}.brand-logo{width:44px;height:44px;border:2px solid #191919;border-radius:5px;background:#ffdf45;box-shadow:4px 4px 0 #191919}.brand-logo svg{width:22px;height:22px}.brand span em{color:#287d55}
+.badge-connected{border:2px solid #191919;border-radius:4px;color:#171717;background:#70e6a5;padding:7px 12px;box-shadow:3px 3px 0 #191919}.badge-connected .dot{box-shadow:none}
+.icon-btn,.copy-btn{border:2px solid #191919!important;border-radius:5px!important;background:#fffdf6!important;color:#171717!important;box-shadow:3px 3px 0 #191919;min-width:40px;min-height:40px}
+.screen{width:min(100% - 36px,1440px);margin:28px auto 0;animation:workspace-enter .24s ease both}
+#screen-login,#screen-otp{width:min(100% - 32px,560px);margin:clamp(28px,8vh,90px) auto}
+.auth-card{padding:clamp(22px,4vw,42px)!important}
+.dashboard-intro{display:flex;align-items:end;justify-content:space-between;gap:24px;padding:clamp(22px,4vw,48px);margin:0 0 24px;background:#ffdf45;border:2px solid #191919;box-shadow:6px 6px 0 #191919;min-height:210px}
+.dashboard-intro-copy{max-width:760px}.dashboard-kicker{font-size:11px;font-weight:800;letter-spacing:.14em;color:#37342b}.dashboard-intro h1{font-size:clamp(34px,5vw,68px);line-height:.98;letter-spacing:-.075em;margin:14px 0}.dashboard-intro h1 span{color:#287d55}.dashboard-intro p{font-size:clamp(14px,1.5vw,18px);max-width:520px;color:#34332c}.dashboard-intro-stamp{width:110px;height:110px;flex:0 0 110px;border:2px solid #191919;background:#fffdf6;box-shadow:4px 4px 0 #191919;display:grid;place-content:center;text-align:center;transform:rotate(3deg)}.dashboard-intro-stamp span{font-size:34px;font-weight:900;letter-spacing:-.1em}.dashboard-intro-stamp small{font-size:9px;font-weight:800;letter-spacing:.1em}
+/* Credentials become a compact security workspace instead of the page's main focus. */
+.token-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:18px!important;margin:0 0 24px!important;box-shadow:4px 4px 0 #191919!important}
+.token-block{min-width:0}.token-label{font-size:10px!important;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}.token-box{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;background:#f4f0e5;border:1.5px solid #191919;border-radius:4px}.token-text{font:11px/1.5 'JetBrains Mono',monospace;overflow-wrap:anywhere;min-width:0;color:#68665f}.token-actions{display:flex;align-items:center;gap:6px}.token-toggle{border:1.5px solid #191919!important;border-radius:3px!important;background:#fffdf6!important;color:#171717!important;font-size:9px!important;font-weight:800;box-shadow:2px 2px 0 #191919}.token-status{grid-column:1/-1;border:1.5px solid #191919;background:#70e6a5;color:#171717;border-radius:3px;padding:8px 10px;font-size:12px;font-weight:700}.token-status .dot{background:#171717;box-shadow:none}.token-btns{grid-column:1/-1;display:flex;gap:10px}.token-btns .btn{flex:1}
+.btn,.menu-tab,.token-toggle,.docs-nav-pill,.copy-url{border-radius:4px!important;transition:transform .14s ease,box-shadow .14s ease,background-color .14s ease!important}
+.btn{border:2px solid #191919!important;box-shadow:3px 3px 0 #191919!important;font-weight:800!important;min-height:44px}.btn-primary,.btn-purple,.btn-purple-soft{background:#ffdf45!important;color:#171717!important}.btn-outline,.btn-ghost{background:#fffdf6!important;color:#171717!important;border-color:#191919!important}.btn-danger-soft{background:#ff8585!important;color:#171717!important}.btn:hover,.menu-tab:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #191919!important}.btn:active,.menu-tab:active{transform:translate(3px,3px);box-shadow:0 0 0 #191919!important}
+/* Desktop app shell: fixed left navigation, broad working canvas. */
+.menu-tabs{position:fixed;z-index:75;left:20px;top:50%;transform:translateY(-50%);width:76px;display:flex;flex-direction:column;gap:10px;padding:10px;background:#fffdf6;border:2px solid #191919;box-shadow:4px 4px 0 #191919;border-radius:5px}
+.menu-tab{width:100%;min-height:68px;padding:9px 5px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;border:1.5px solid #191919!important;background:#fffdf6!important;color:#171717!important;font-size:10px;font-weight:800;box-shadow:2px 2px 0 #191919!important}.menu-tab svg{width:22px;height:22px;stroke-width:2}.menu-tab.active{background:#ffdf45!important}
+#screen-dashboard{width:min(100% - 190px,1320px);margin:28px 34px 0 max(150px,calc((100vw - 1440px)/2 + 120px))}
+#screen-dashboard .dashboard-intro{grid-column:1/-1}
+#screen-dashboard .token-card{grid-column:1/-1}
+#screen-dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.72fr);align-items:start;gap:0 24px}
+#screen-dashboard .dashboard-intro,#screen-dashboard .token-card,#screen-dashboard .menu-tabs{grid-column:1/-1}
+#screen-dashboard .menu-tabs{grid-column:1/-1}
+#screen-dashboard .panel{min-width:0;margin:0 0 24px}
+#screen-dashboard #panel-qris{grid-column:1;grid-row:3}
+#screen-dashboard #panel-history,#screen-dashboard #panel-payouts{grid-column:1/-1}
+#screen-dashboard .panel-card{padding:clamp(18px,2.2vw,30px)!important}
+.panel-title{font-size:clamp(20px,2vw,28px)!important;font-weight:850;letter-spacing:-.05em;margin-bottom:22px}
+.field-label{font-size:11px!important;letter-spacing:.12em;font-weight:800!important;text-transform:uppercase;color:#444!important}
+input,textarea,select{background:#fff!important;color:#171717!important;border:2px solid #191919!important;border-radius:4px!important;box-shadow:3px 3px 0 #191919!important;min-height:48px;font-family:inherit}
+textarea{min-height:100px}input:focus,textarea:focus,select:focus{outline:3px solid #9bc8ff!important;outline-offset:2px}
+.qris-result{border:2px solid #191919!important;border-radius:5px!important;background:#fffdf6!important;box-shadow:4px 4px 0 #191919!important;padding:20px!important}
+.qris-status-badge{border:1.5px solid #191919!important;border-radius:3px!important;background:#ffdf45!important;color:#171717!important}
+.drop-zone,.qris-upload-zone{border:2px dashed #191919!important;background:#f4f0e5!important;border-radius:4px!important}
+.docs-header{position:sticky;top:72px;z-index:50;background:#f4f0e5!important;border-bottom:2px solid #191919;padding:14px 0!important;backdrop-filter:none!important}
+.docs-hero{background:#ffdf45!important;border:2px solid #191919!important;box-shadow:5px 5px 0 #191919!important;border-radius:4px!important}.docs-nav-pill{border:1.5px solid #191919!important;background:#fffdf6!important;color:#171717!important;border-radius:3px!important}.docs-endpoint,.docs-section,.endpoint-card{border:2px solid #191919!important;background:#fffdf6!important;border-radius:4px!important;box-shadow:3px 3px 0 #191919!important}
+.console-fab{background:#ffdf45!important;color:#171717!important;border:2px solid #191919!important;border-radius:4px!important;box-shadow:4px 4px 0 #191919!important}.console-drawer{background:#fffdf6!important;border:2px solid #191919!important;border-radius:4px!important;box-shadow:6px 6px 0 #191919!important}
+.empty-state,.qris-empty{color:#68665f!important}.empty-state svg,.qris-empty svg{stroke:#171717}
+button:focus-visible,a:focus-visible{outline:3px solid #2f80ed!important;outline-offset:3px}
+@keyframes workspace-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){#screen-dashboard{width:calc(100% - 32px);margin:22px auto 0;display:block}.menu-tabs{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));top:auto;transform:none;width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px;background:#fffdf6;box-shadow:0 4px 0 #191919}.menu-tab{min-height:54px;flex-direction:row;gap:8px;font-size:11px}.menu-tab svg{width:20px;height:20px}.app{padding-bottom:110px}.screen{width:calc(100% - 28px);margin-top:20px}.dashboard-intro{min-height:0;padding:24px 20px}.dashboard-intro-stamp{width:72px;height:72px;flex-basis:72px}.dashboard-intro-stamp span{font-size:25px}.token-card{grid-template-columns:minmax(0,1fr);gap:12px;padding:14px!important}.token-status,.token-btns{grid-column:1}.token-btns{display:grid;grid-template-columns:1fr 1fr}.docs-header{top:70px}.console-fab{bottom:88px!important}}
+@media(max-width:520px){.header{min-height:64px;padding:9px 14px}.brand{font-size:17px}.brand-logo{width:38px;height:38px}.badge-connected{font-size:9px;padding:6px 8px}.dashboard-intro{align-items:start;gap:10px}.dashboard-intro h1{font-size:36px}.dashboard-intro p{font-size:13px}.dashboard-intro-stamp{width:58px;height:58px;flex-basis:58px}.dashboard-intro-stamp span{font-size:20px}.dashboard-intro-stamp small{font-size:7px}.token-box{grid-template-columns:minmax(0,1fr);}.token-actions{justify-content:space-between}.token-text{font-size:10px}.panel-title{font-size:21px!important}.panel-card{padding:16px!important}.token-btns{grid-template-columns:1fr 1fr}.docs-header{top:62px}.screen{width:calc(100% - 24px)}#screen-login,#screen-otp{width:calc(100% - 24px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* ===== FULL PRODUCT REDESIGN: PUBLIC LANDING + WORKSPACE ===== */
+:root{--bg:#f6f3e8;--text:#171717;--muted:#65645f;--green:#75e6a4;--green2:#43c87b;--purple:#3159e8;--blue:#a9cbff;--red:#ef6b64;--orange:#ffb65b;--radius:8px;--radius-sm:5px;--shadow:6px 6px 0 #171717;--ink:#171717;--paper:#fffdf6;--yellow:#ffdf45;--line:2px solid #171717}
+body{background:var(--bg)!important;color:var(--ink)!important;overflow-x:clip}body:before,body:after{display:none!important}
+.app{max-width:1440px!important;width:100%;padding:0 clamp(18px,4vw,64px) 110px!important;margin:0 auto!important;min-height:100dvh}
+.header{margin:0 calc(clamp(18px,4vw,64px)*-1)!important;padding:18px clamp(18px,4vw,64px)!important;background:rgba(246,243,232,.94)!important;backdrop-filter:blur(14px)!important;border-bottom:2px solid var(--ink);gap:18px;min-height:82px}
+.header .brand{order:2;flex:1;cursor:pointer}.global-menu-btn{order:1;width:44px;height:44px;background:var(--yellow)!important;color:var(--ink)!important;border:2px solid var(--ink)!important;border-radius:7px!important;box-shadow:3px 3px 0 var(--ink)}.header-actions{order:3;gap:10px}.header-actions .header-actions{display:flex;align-items:center;gap:10px}.profile-top-btn{display:grid;width:44px;height:44px;background:var(--paper)!important;border:2px solid var(--ink)!important;color:var(--ink)!important;border-radius:50%!important;box-shadow:3px 3px 0 var(--ink)}.icon-btn{width:42px;height:42px;border:2px solid var(--ink)!important;border-radius:7px!important;background:var(--paper)!important;color:var(--ink)!important;box-shadow:3px 3px 0 var(--ink)}.icon-btn svg,.global-menu-btn svg,.profile-top-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.brand-logo{background:var(--yellow)!important;border:2px solid var(--ink)!important;border-radius:8px!important;box-shadow:3px 3px 0 var(--ink)!important}.brand-logo svg{stroke:var(--ink)!important}.brand span em{color:#3159e8!important}.badge-connected{background:var(--green)!important;color:var(--ink)!important;border:2px solid var(--ink)!important;border-radius:4px!important;font-size:10px;box-shadow:3px 3px 0 var(--ink)}.badge-connected .dot{box-shadow:none!important;background:var(--ink)!important}
+.screen{width:100%;max-width:none!important;margin:0!important;animation:page-enter .32s cubic-bezier(.2,.75,.25,1) both}.screen.active{display:flex}.screen.leaving{animation:page-leave .16s ease both;pointer-events:none}@keyframes page-enter{from{opacity:0;transform:translateY(12px) scale(.995);clip-path:inset(0 0 4% 0)}to{opacity:1;transform:none;clip-path:inset(0)}}@keyframes page-leave{to{opacity:0;transform:translateY(-5px)}}
+/* Public landing */
+#screen-home{padding-top:clamp(24px,5vw,76px);gap:clamp(42px,7vw,96px)}.landing-hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr);gap:clamp(32px,7vw,100px);align-items:center;min-height:520px}.landing-copy{max-width:680px}.eyebrow{font-size:10px;letter-spacing:.16em;font-weight:850;color:#55534c;text-transform:uppercase;display:flex;align-items:center;gap:9px}.eyebrow-mark{width:9px;height:9px;background:#3159e8;border:1px solid var(--ink);display:inline-block;transform:rotate(45deg)}.landing-copy h1{font-size:clamp(58px,8.3vw,116px);line-height:.88;letter-spacing:-.085em;font-weight:900;margin:26px 0 24px}.landing-copy h1 span{color:#3159e8}.landing-lead{max-width:520px;font-size:clamp(15px,1.5vw,19px);line-height:1.75;color:#55534c}.landing-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}.landing-actions .btn{width:auto;min-height:54px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:10px}.landing-actions svg,.landing-footer svg,.landing-cta svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.landing-proof{display:flex;align-items:center;gap:10px;margin-top:28px;font-size:11px;font-weight:700;color:#68665f}.proof-icon{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--ink);border-radius:50%;background:var(--green)}.proof-icon svg{width:14px;height:14px;fill:none;stroke:var(--ink);stroke-width:2.5}.landing-art{min-height:430px;position:relative;display:grid;place-items:center;isolation:isolate}.landing-art:before{content:'';position:absolute;width:min(88%,440px);aspect-ratio:1;border-radius:50%;background:#dce6ff;border:2px solid var(--ink);z-index:-2}.art-orbit{position:absolute;border:1.5px dashed #171717;border-radius:50%;transform:rotate(-22deg)}.orbit-one{width:115%;height:62%}.orbit-two{width:95%;height:85%;transform:rotate(35deg)}.art-main-card{width:min(88%,420px);padding:22px;background:var(--paper);border:2px solid var(--ink);box-shadow:10px 10px 0 var(--ink);transform:rotate(-4deg);z-index:2;animation:card-float 6s ease-in-out infinite}.art-card-head,.art-card-foot{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850;letter-spacing:.12em}.art-card-head svg{width:30px;height:30px;stroke:#3159e8;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.art-bars{height:180px;display:flex;align-items:end;gap:10px;padding:20px 4px 8px;border-bottom:1px solid #d6d2c5;margin:12px 0}.art-bars i{flex:1;display:block;background:#ffdf45;border:1.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);animation:bar-rise .8s cubic-bezier(.2,.8,.2,1) both;transform-origin:bottom}.art-bars i:nth-child(2n){background:#75e6a4}.art-bars i:nth-child(3n){background:#a9cbff}.art-card-foot{font-size:8px;color:#666}.art-card-foot b{color:#171717;background:#75e6a4;padding:5px 7px;border:1px solid var(--ink)}.art-chip{position:absolute;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--yellow);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);z-index:3;font-size:9px;line-height:1.5;letter-spacing:.08em;animation:chip-float 5s ease-in-out infinite}.art-chip svg{width:28px;height:28px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.art-chip b{font-size:10px}.chip-top{top:10%;right:0;transform:rotate(5deg)}.chip-bottom{bottom:9%;left:0;background:var(--green);transform:rotate(-5deg);animation-delay:-2s}@keyframes card-float{0%,100%{translate:0 0}50%{translate:0 -9px}}@keyframes chip-float{0%,100%{translate:0 0}50%{translate:0 7px}}@keyframes bar-rise{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+.landing-section-head{display:flex;align-items:end;justify-content:space-between;gap:30px;border-top:2px solid var(--ink);padding-top:28px}.landing-section-head h2,.landing-cta h2{font-size:clamp(32px,4.5vw,56px);line-height:1;letter-spacing:-.06em;margin-top:13px}.landing-section-head>p{max-width:390px;line-height:1.7;color:#5e5b54;font-size:14px}.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.feature-card{min-height:230px;padding:25px;border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:flex;flex-direction:column;align-items:flex-start;transition:transform .2s,box-shadow .2s}.feature-card:hover{transform:translate(-2px,-3px);box-shadow:8px 8px 0 var(--ink)}.feature-card>svg{width:34px;height:34px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-bottom:25px}.feature-yellow{background:var(--yellow)}.feature-blue{background:#c5d8ff}.feature-green{background:#a4efbd}.feature-index{font-size:9px;font-weight:850;letter-spacing:.14em}.feature-card h3{font-size:22px;letter-spacing:-.04em;margin:10px 0}.feature-card p{font-size:13px;line-height:1.65;color:#4f4d47}.landing-cta{display:flex;align-items:center;justify-content:space-between;gap:24px;background:#171717;color:#fffdf6;border:2px solid #171717;padding:clamp(24px,4vw,48px);box-shadow:7px 7px 0 #3159e8}.landing-cta .eyebrow{color:#b9b7af}.landing-cta h2{margin-bottom:10px}.landing-cta p{color:#c7c5bd;font-size:13px}.landing-cta .btn{width:auto;min-width:190px;display:flex;gap:10px;align-items:center;justify-content:center}.landing-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;border-top:1px solid #c9c5b8;padding:22px 0 10px;font-size:11px;font-weight:750}.footer-dot{display:inline-block;width:5px;height:5px;background:#3159e8;border-radius:50%;margin:0 8px;vertical-align:middle}.landing-footer button{display:flex;align-items:center;gap:8px;border:0;background:none;font:inherit;cursor:pointer;color:var(--ink)}
+/* Auth screens */
+#screen-login,#screen-otp{max-width:540px!important;margin:clamp(32px,8vh,90px) auto 0!important;min-height:500px;justify-content:center}.auth-wrap{padding:0!important;justify-content:center}.auth-card{padding:clamp(28px,5vw,52px)!important;text-align:left!important;background:var(--paper)!important;border:2px solid var(--ink)!important;border-radius:8px!important;box-shadow:8px 8px 0 var(--ink)!important;backdrop-filter:none!important}.auth-icon{margin:0 0 22px!important;border:2px solid var(--ink)!important;background:var(--yellow)!important;color:var(--ink)!important;border-radius:8px!important}.auth-card h1{font-size:clamp(30px,5vw,42px)!important;letter-spacing:-.065em!important}.auth-card .sub{font-size:14px!important;line-height:1.7!important;color:#666!important;margin-bottom:30px!important}.phone-row{background:#fff!important;border:2px solid var(--ink)!important;border-radius:5px!important;box-shadow:3px 3px 0 var(--ink)}.phone-prefix{color:#555!important;border-right:1px solid #ccc!important}.phone-row input{box-shadow:none!important;border:0!important;min-height:50px!important}.phone-row:focus-within{outline:3px solid #a9cbff;outline-offset:2px;box-shadow:3px 3px 0 var(--ink)}.field-label{color:#555!important}.btn{border-radius:5px!important;font-weight:800!important;letter-spacing:-.01em;transition:transform .16s,box-shadow .16s,background .16s!important}.btn-primary{background:var(--yellow)!important;color:var(--ink)!important;border:2px solid var(--ink)!important;box-shadow:4px 4px 0 var(--ink)!important}.btn-primary:hover{transform:translate(-1px,-2px);box-shadow:6px 6px 0 var(--ink)!important}.btn-primary:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)!important}.btn-purple,.btn-purple-soft{background:#c5d8ff!important;color:var(--ink)!important;border:2px solid var(--ink)!important;box-shadow:4px 4px 0 var(--ink)!important}.btn-outline,.btn-ghost{background:var(--paper)!important;color:var(--ink)!important;border:2px solid var(--ink)!important;box-shadow:3px 3px 0 var(--ink)!important}.otp-boxes input{border:2px solid var(--ink)!important;box-shadow:3px 3px 0 var(--ink)!important;border-radius:5px!important;background:#fff!important;color:var(--ink)!important}.error-msg{color:#9d2525!important;background:#ffe4df!important;border:1.5px solid #9d2525!important;border-radius:4px!important}
+/* Workspace */
+#screen-dashboard{gap:20px;padding-top:clamp(24px,4vw,48px)}.dashboard-intro{border:2px solid var(--ink)!important;border-radius:8px!important;box-shadow:7px 7px 0 var(--ink)!important;background:var(--yellow)!important;color:var(--ink)!important;padding:clamp(24px,4vw,48px)!important;min-height:210px!important}.dashboard-intro h1{font-size:clamp(42px,6vw,76px)!important;letter-spacing:-.075em!important}.dashboard-intro h1 span{color:#3159e8!important}.dashboard-intro p{color:#39372f!important}.dashboard-intro-stamp{background:#fffdf6!important;border:2px solid var(--ink)!important;box-shadow:4px 4px 0 var(--ink)!important;border-radius:6px!important}.dashboard-intro-stamp span{color:var(--ink)!important}.dashboard-intro-stamp small{color:#555!important}.analytics-overview{display:flex;flex-direction:column;gap:16px}.analytics-heading{display:flex;align-items:end;justify-content:space-between;gap:16px}.analytics-heading h2{font-size:clamp(28px,3.4vw,42px);letter-spacing:-.065em;margin-top:6px}.heading-period{color:#3159e8}.analytics-live{display:flex;align-items:center;gap:7px;font-size:9px;font-weight:850;letter-spacing:.1em;border:1.5px solid var(--ink);background:var(--paper);padding:8px 10px}.analytics-live span{width:7px;height:7px;border-radius:50%;background:#43c87b;border:1px solid var(--ink)}.analytics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.metric-card{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);padding:18px;min-width:0}.metric-primary{background:#c5d8ff}.metric-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;font-weight:750;color:#555}.metric-top svg{width:23px;height:23px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.metric-card strong{display:block;font-size:clamp(22px,3vw,34px);letter-spacing:-.06em;margin:18px 0 5px}.metric-card small{font-size:10px;color:#65625a;line-height:1.5}.activity-chart-card{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);padding:clamp(16px,2.5vw,26px)}.chart-head{display:flex;justify-content:space-between;align-items:end;gap:12px}.chart-head h3{font-size:20px;letter-spacing:-.04em;margin-top:7px}.chart-note{font-size:10px;color:#69665e}.chart-plot{height:180px;display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;margin-top:20px}.chart-y-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:9px;color:#777}.chart-plot>svg{width:100%;height:100%;overflow:visible}.chart-grid-lines{stroke:#dcd8cd;stroke-width:1;stroke-dasharray:3 5;fill:none}.chart-area{fill:#c5d8ff;opacity:.8}.chart-line{fill:none;stroke:#3159e8;stroke-width:3;stroke-linecap:round}.chart-point{fill:var(--yellow);stroke:var(--ink);stroke-width:2}.chart-foot{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #dedace;padding-top:12px;margin-top:10px;font-size:9px;color:#777}.token-card,.panel-card,.glass,.glass-strong{background:var(--paper)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:2px solid var(--ink)!important;border-radius:7px!important;box-shadow:5px 5px 0 var(--ink)!important;color:var(--ink)!important}.token-text{background:#f1eee4!important;color:#57554e!important;border:1.5px solid var(--ink)!important}.token-status{background:#a4efbd!important;color:var(--ink)!important;border:1.5px solid var(--ink)!important}.menu-tabs{position:fixed!important;z-index:80;left:50%!important;right:auto!important;bottom:max(20px,env(safe-area-inset-bottom))!important;top:auto!important;transform:translateX(-50%)!important;width:max-content!important;max-width:calc(100vw - 32px)!important;display:flex!important;gap:5px!important;padding:7px!important;border:2px solid var(--ink)!important;border-radius:18px!important;background:rgba(255,253,246,.96)!important;box-shadow:5px 5px 0 var(--ink)!important;backdrop-filter:blur(16px)!important}.menu-tab{display:flex!important;align-items:center;justify-content:center;gap:8px;min-height:46px!important;min-width:112px;padding:0 16px!important;border:1.5px solid transparent!important;border-radius:11px!important;background:transparent!important;color:#57554e!important;font-size:11px!important;font-weight:850!important;letter-spacing:.02em;transition:background .2s,transform .2s!important}.menu-tab svg{width:19px!important;height:19px!important;stroke:currentColor!important}.menu-tab.active{background:var(--yellow)!important;color:var(--ink)!important;border:1.5px solid var(--ink)!important;box-shadow:2px 2px 0 var(--ink)!important;transform:translateY(-2px)}.panel{animation:panel-enter .24s ease both}@keyframes panel-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* Navigation drawer */
+.nav-backdrop{position:fixed;inset:0;background:rgba(23,23,23,.42);z-index:100;opacity:0;visibility:hidden;transition:opacity .24s,visibility .24s;backdrop-filter:blur(3px)}.nav-backdrop.open{opacity:1;visibility:visible}.nav-drawer{position:fixed;inset:0 auto 0 0;width:min(360px,88vw);z-index:101;background:var(--paper);border-right:2px solid var(--ink);box-shadow:8px 0 0 rgba(23,23,23,.14);padding:26px 20px 18px;display:flex;flex-direction:column;overflow-y:auto;transform:translateX(-105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);visibility:hidden}.nav-drawer.open{transform:translateX(0);visibility:visible}.drawer-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:26px;border-bottom:2px solid var(--ink);margin-bottom:20px}.drawer-head h2{font-size:35px;letter-spacing:-.07em;margin-top:7px}.drawer-section-label{font-size:9px;font-weight:900;letter-spacing:.16em;color:#7b786f;margin:18px 0 8px}.drawer-link{width:100%;display:flex;align-items:center;gap:13px;padding:13px 12px;margin:3px 0;text-align:left;border:1.5px solid transparent;border-radius:5px;background:transparent;color:var(--ink);font:700 13px inherit;cursor:pointer;transition:background .18s,transform .18s,border-color .18s}.drawer-link>svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.drawer-link:hover,.drawer-link.active{background:var(--yellow);border-color:var(--ink);transform:translateX(3px)}.drawer-arrow{margin-left:auto}.drawer-logout{color:#a12e2e;margin-top:auto}.drawer-foot{display:flex;align-items:center;gap:10px;border-top:1px solid #d9d5c9;margin-top:24px;padding-top:18px;font-size:12px;font-weight:850}.drawer-foot small{display:block;font-size:10px;font-weight:500;color:#777;margin-top:3px}.drawer-foot-mark{width:12px;height:12px;background:var(--green);border:1.5px solid var(--ink);transform:rotate(45deg)}
+/* Docs/profile/console */
+#screen-profile,#screen-docs{padding-top:24px;gap:16px} #screen-profile .docs-header>.btn,#screen-docs .docs-header>.btn{display:none!important}.docs-header{position:static!important;top:auto!important;background:transparent!important;border-bottom:2px solid var(--ink)!important;padding:10px 0 18px!important;display:flex;align-items:center;justify-content:space-between}.docs-header .btn{width:auto!important}.docs-hero{border-radius:7px!important}.docs-mode{max-width:1440px!important}.console-fab{right:24px!important;bottom:105px!important;z-index:70!important;border-radius:7px!important}.console-drawer{border-radius:8px!important}.qris-result{color:var(--ink)!important}.qris-status-badge span{font-size:0}.qris-status-badge span:after{content:'';display:inline-block;width:7px;height:7px;background:currentColor;border-radius:50%}
+@media(min-width:901px){#screen-dashboard{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}.dashboard-intro{grid-column:1}.analytics-overview{grid-column:1}.token-card{grid-column:1;display:grid;grid-template-columns:1fr 1fr;gap:18px}.menu-tabs{position:fixed!important;left:50%!important;bottom:22px!important}.panel{grid-column:1}.qris-form{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:16px;align-items:start}.qris-form #qrisManualSection{grid-column:2;grid-row:1 / span 2}.qris-form #btnGenerateQris{grid-column:1;grid-row:2;align-self:end}.qris-result{display:grid;grid-template-columns:minmax(160px,260px) 1fr;align-items:center;gap:12px}.qris-result img{grid-row:span 4;max-width:100%}}
+@media(max-width:900px){.app{padding:0 20px 118px!important}.header{margin:0 -20px!important;padding:12px 20px!important;min-height:72px}.landing-hero{grid-template-columns:1fr;gap:24px;min-height:0}.landing-copy h1{font-size:clamp(58px,13vw,88px)}.landing-art{min-height:340px;max-width:560px;width:100%;margin:0 auto}.art-bars{height:135px}.landing-section-head{align-items:start;flex-direction:column}.landing-section-head>p{max-width:600px}.feature-grid{grid-template-columns:1fr}.feature-card{min-height:180px}.feature-card>svg{margin-bottom:18px}.landing-cta{align-items:flex-start;flex-direction:column}.landing-cta .btn{width:100%}.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-card:last-child{grid-column:1/-1}.dashboard-intro{margin:0!important}.token-card{grid-template-columns:1fr!important}.menu-tabs{bottom:max(14px,env(safe-area-inset-bottom))!important;width:calc(100vw - 32px)!important;max-width:460px!important;justify-content:stretch}.menu-tab{flex:1;min-width:0!important;padding:0 7px!important;flex-direction:column;gap:4px;font-size:9px!important;min-height:52px!important}.screen{margin-top:0!important}.docs-header{top:auto!important}.chart-plot{height:145px}}
+@media(max-width:520px){.app{padding-left:14px!important;padding-right:14px!important}.header{margin:0 -14px!important;padding:10px 14px!important;gap:9px;min-height:64px}.brand{font-size:15px!important;gap:7px!important}.brand-logo{width:34px!important;height:34px!important}.global-menu-btn,.profile-top-btn{width:37px!important;height:37px!important}.badge-connected{font-size:8px!important;padding:5px 7px!important}.header-actions{gap:6px!important}.landing-hero{padding-top:22px}.landing-copy h1{font-size:clamp(52px,15vw,72px);margin:20px 0}.landing-lead{font-size:14px}.landing-actions{display:grid;grid-template-columns:1fr}.landing-actions .btn{width:100%}.landing-art{min-height:290px}.art-main-card{padding:15px;width:84%}.art-bars{height:112px;gap:6px}.chip-top{right:-2px;top:8%}.chip-bottom{left:-2px;bottom:5%}.art-chip{padding:9px;font-size:8px}.art-chip svg{width:22px;height:22px}.landing-section-head h2{font-size:35px}.landing-cta h2{font-size:36px}.landing-footer{align-items:flex-start;flex-direction:column}.auth-card{padding:25px 20px!important}.analytics-grid{grid-template-columns:1fr 1fr;gap:9px}.metric-card{padding:13px}.metric-top{font-size:9px}.metric-top svg{width:19px;height:19px}.metric-card strong{font-size:23px}.metric-card small{font-size:9px}.chart-head{align-items:flex-start;flex-direction:column}.chart-note{font-size:9px}.chart-plot{grid-template-columns:28px minmax(0,1fr);height:125px}.chart-foot{font-size:8px}.analytics-live{font-size:8px;padding:7px}.dashboard-intro{padding:22px 18px!important}.dashboard-intro h1{font-size:42px!important}.dashboard-intro-stamp{width:60px!important;height:60px!important;flex-basis:60px!important}.token-btns{grid-template-columns:1fr 1fr!important}.menu-tabs{gap:2px!important;padding:5px!important;border-radius:15px!important}.menu-tab{min-height:49px!important;font-size:8px!important}.menu-tab svg{width:18px!important;height:18px!important}.console-fab{bottom:85px!important;right:14px!important}}
+@media(prefers-reduced-motion:reduce){.art-main-card,.art-chip,.art-bars i{animation:none!important}.screen,.panel{animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="app" id="appRoot">
+  <header class="header">
+    <button class="icon-btn global-menu-btn" id="openDrawer" onclick="toggleNavDrawer(true)" aria-label="Buka menu navigasi" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="brand" onclick="showScreen(state.accessToken ? 'dashboard' : 'home')" role="button" tabindex="0" aria-label="GoMerchPro beranda">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <span>GoMerch<em>Pro</em></span>
+    </div>
+    <div class="header-actions">
+      <div id="headerBadge" class="header-actions" style="display:none">
+      <button class="icon-btn" id="btnRefresh" onclick="refreshAll()" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
+      <div class="badge-connected"><span class="dot"></span> CONNECTED</div>
+      </div>
+      <button class="icon-btn profile-top-btn" id="profileTopBtn" onclick="showScreen('profile')" aria-label="Buka profil" title="Profile" style="display:none"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></button>
+    </div>
+  </header>
+
+  <div class="nav-backdrop" id="navBackdrop" onclick="toggleNavDrawer(false)"></div>
+  <aside class="nav-drawer" id="navDrawer" aria-hidden="true">
+    <div class="drawer-head"><div><div class="eyebrow">WORKSPACE MENU</div><h2>Navigate.</h2></div><button class="icon-btn" onclick="toggleNavDrawer(false)" aria-label="Tutup menu"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="drawer-section-label">WORKSPACE</div>
+    <button class="drawer-link" data-screen="dashboard" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="11" width="7" height="10"/><rect x="3" y="14" width="8" height="7"/></svg><span>Dashboard</span><svg class="drawer-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    <button class="drawer-link" data-screen="qris" onclick="navigateTo('qris')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14v7M14 19h3"/></svg><span>QRIS</span></button>
+    <button class="drawer-link" data-screen="history" onclick="navigateTo('history')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Transaction history</span></button>
+    <button class="drawer-link" data-screen="payouts" onclick="navigateTo('payouts')"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 20V9h14v11M3 9l9-6 9 6M9 13v3m6-3v3"/></svg><span>Payouts</span></button>
+    <div class="drawer-section-label">DEVELOPER</div>
+    <button class="drawer-link" data-screen="docs" onclick="navigateTo('docs')"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 13h8M8 17h8"/></svg><span>Documentation API</span></button>
+    <button class="drawer-link" onclick="toggleConsole(true);toggleNavDrawer(false)"><svg viewBox="0 0 24 24"><path d="m4 5 6 6-6 6M12 18h8"/></svg><span>API Console</span></button>
+    <div class="drawer-section-label">ACCOUNT</div>
+    <button class="drawer-link" data-screen="profile" onclick="navigateTo('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg><span>Profile & Security</span></button>
+    <button class="drawer-link drawer-logout" onclick="toggleNavDrawer(false);logout()"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg><span>Logout</span></button>
+    <div class="drawer-foot"><span class="drawer-foot-mark"></span><span>GoMerchPro <small>Merchant workspace</small></span></div>
+  </aside>
+
+  <section id="screen-home" class="screen active">
+    <div class="landing-hero">
+      <div class="landing-copy">
+        <div class="eyebrow"><span class="eyebrow-mark"></span> MERCHANT API WORKSPACE</div>
+        <h1>Payment<br><span>in motion.</span></h1>
+        <p class="landing-lead">Satu ruang kerja untuk menghubungkan GoPay Merchant, mengelola QRIS, dan memahami aktivitas transaksi melalui REST API.</p>
+        <div class="landing-actions">
+          <button class="btn btn-primary" onclick="showScreen('login')">Masuk ke workspace <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7"/></svg></button>
+          <button class="btn btn-outline" onclick="showScreen('docs')">Jelajahi API Docs <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v5h4M10 13h6M10 17h6"/></svg></button>
+        </div>
+        <div class="landing-proof"><span class="proof-icon"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><span>Developer-first · Data-driven · Secure by design</span></div>
+      </div>
+      <div class="landing-art" aria-label="Ilustrasi dashboard pembayaran">
+        <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+        <div class="art-chip chip-top"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M8 15h4"/></svg><span>MERCHANT<br><b>CONNECTED</b></span></div>
+        <div class="art-main-card"><div class="art-card-head"><span>PAYMENT FLOW</span><svg viewBox="0 0 24 24"><path d="M4 17 9 11l4 3 7-8"/><path d="M15 6h5v5"/></svg></div><div class="art-bars"><i style="height:28%"></i><i style="height:44%"></i><i style="height:36%"></i><i style="height:62%"></i><i style="height:50%"></i><i style="height:82%"></i><i style="height:68%"></i><i style="height:100%"></i></div><div class="art-card-foot"><span>TRANSACTION ACTIVITY</span><b>LIVE VIEW</b></div></div>
+        <div class="art-chip chip-bottom"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14v7M14 19h3"/></svg><span>QRIS<br><b>READY TO BUILD</b></span></div>
+      </div>
+    </div>
+    <div class="landing-section-head"><div><div class="eyebrow">ONE WORKSPACE</div><h2>Tools for every<br>payment workflow.</h2></div><p>Kelola alur penting melalui satu antarmuka yang dirancang untuk merchant dan developer.</p></div>
+    <div class="feature-grid">
+      <article class="feature-card feature-yellow"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14v7M14 19h3"/></svg><span class="feature-index">01 / PAYMENTS</span><h3>QRIS workflows</h3><p>Buat dan periksa QRIS melalui alur yang tersedia di layanan.</p></article>
+      <article class="feature-card feature-blue"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 14l4-4 4 3 5-7"/></svg><span class="feature-index">02 / VISIBILITY</span><h3>Transaction insights</h3><p>Jelajahi data mutasi dan aktivitas tanpa mengarang statistik.</p></article>
+      <article class="feature-card feature-green"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3"/></svg><span class="feature-index">03 / DEVELOPERS</span><h3>API workspace</h3><p>Dokumentasi endpoint, contoh request, dan console pengujian.</p></article>
+    </div>
+    <div class="landing-cta"><div><div class="eyebrow">READY WHEN YOU ARE</div><h2>Make your next move.</h2><p>Masuk untuk membuka workspace merchant.</p></div><button class="btn btn-primary" onclick="showScreen('login')">Mulai sekarang <svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></svg></button></div>
+    <footer class="landing-footer"><span>GoMerchPro <span class="footer-dot"></span> Merchant API Workspace</span><button onclick="showScreen('docs')">Documentation <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button></footer>
+  </section>
+
+  <section id="screen-login" class="screen">
+    <div class="auth-wrap">
+      <div class="glass glass-strong auth-card">
+        <h1>Merchant Access</h1>
+        <p class="sub">Masuk ke dashboard GoBiz Merchant</p>
+        <div>
+          <label class="field-label">Nomor HP</label>
+          <div class="phone-row">
+            <span class="phone-prefix">+62</span>
+            <input type="tel" id="phoneInput" placeholder="81234567890" inputmode="numeric" autocomplete="tel">
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" id="btnLogin" onclick="requestOtp()">
+            Lanjutkan
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="error-msg" id="loginError"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-otp" class="screen">
+    <div class="auth-wrap">
+      <div class="glass glass-strong auth-card">
+        <div class="auth-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h1>Verifikasi OTP</h1>
+        <p class="sub">Kode dikirim ke <strong id="otpPhoneDisplay" style="color:var(--text)">+62</strong></p>
+        <div class="otp-boxes" id="otpBoxes">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="0" autocomplete="one-time-code">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="1">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="2">
+          <input type="text" maxlength="1" inputmode="numeric" data-idx="3">
+        </div>
+        <p class="otp-hint">Tempel kode OTP, kolom akan terisi otomatis.</p>
+        <button class="btn btn-purple" id="btnVerify" onclick="verifyOtp()">Verifikasi</button>
+        <button class="btn btn-ghost" onclick="showScreen('login')">GANTI NOMOR HP</button>
+        <div class="error-msg" id="otpError"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-dashboard" class="screen">
+    <div class="dashboard-intro">
+      <div class="dashboard-intro-copy">
+        <div class="dashboard-kicker"><span class="dashboard-kicker-dot"></span> MERCHANT WORKSPACE / 01</div>
+        <h1>Payment <span>control.</span></h1>
+        <p>Kelola QRIS, transaksi, dan payout dari satu ruang kerja.</p>
+      </div>
+      <div class="dashboard-intro-stamp" aria-hidden="true"><span>GM</span><small>GOPAY<br>MERCHANT</small></div>
+    </div>
+    <div class="glass token-card">
+      <div class="token-block">
+        <div class="token-label">Access Token</div>
+        <div class="token-box">
+          <div class="token-text" id="accessTokenText">—</div>
+          <div class="token-actions">
+            <button class="token-toggle" onclick="toggleToken('access')">
+              <span id="accessToggleLabel">TAMPILKAN</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="copy-btn" onclick="copyText(state.accessToken)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="token-block">
+        <div class="token-label">Refresh Token</div>
+        <div class="token-box">
+          <div class="token-text" id="refreshTokenText">—</div>
+          <div class="token-actions">
+            <button class="token-toggle" onclick="toggleToken('refresh')">
+              <span id="refreshToggleLabel">TAMPILKAN</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="copy-btn" onclick="copyText(state.refreshToken)" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="token-status"><span class="dot"></span> Token aktif dan valid</div>
+      <div class="token-btns">
+        <button class="btn btn-sm btn-purple-soft" onclick="showScreen('docs')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          API Docs
+        </button>
+        <button class="btn btn-sm btn-outline" onclick="showScreen('profile')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+          Profile
+        </button>
+      </div>
+    </div>
+
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="qris" onclick="switchTab('qris')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M18 14v3h3"/></svg>
+        QRIS
+      </button>
+      <button class="menu-tab" data-tab="history" onclick="switchTab('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        HISTORY
+      </button>
+      <button class="menu-tab" data-tab="payouts" onclick="switchTab('payouts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>
+        PAYOUTS
+      </button>
+    </div>
+
+    <div class="panel active" id="panel-qris">
+      <div class="glass panel-card">
+        <div class="panel-title">QRIS Dinamis</div>
+        <div class="qris-active-card" id="qrisActiveCard"></div>
+        <div class="qris-form">
+          <div class="field">
+            <label class="field-label">Nominal (IDR)</label>
+            <input type="number" id="qrisAmount" placeholder="30000" min="1">
+          </div>
+          <div id="qrisManualSection">
+            <label class="drop-zone" id="dropZone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <div id="dropZoneText">DROP STATIC QR HERE OR CLICK</div>
+              <input type="file" id="qrFile" accept="image/*" style="display:none" onchange="handleQrFile(event)">
+            </label>
+            <div class="field" id="qrisStaticField">
+              <label class="field-label">Static QR String</label>
+              <textarea id="qrisStatic" placeholder="000201010212..."></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btnGenerateQris" onclick="generateQris()">Generate QR</button>
+        </div>
+        <div class="qris-result" id="qrisResult">
+          <img id="qrisImage" alt="QRIS" src="">
+          <div class="amount" id="qrisResultAmount"></div>
+          <div style="font-size:12px;color:var(--muted)" id="qrisResultTime"></div>
+          <div class="qris-status-badge pending" id="qrisStatusBadge">
+            <span>●</span> PENDING
+          </div>
+          <button class="btn btn-sm btn-outline" style="margin-top:12px;width:auto" onclick="checkQrisStatus()">Cek Status</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-history">
+      <div class="glass panel-card">
+        <div class="panel-title">
+          Recent History
+          <span class="count" id="historyCount">0 Items</span>
+        </div>
+        <div id="historyContent">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <div>NO DATA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-payouts">
+      <div class="glass panel-card">
+        <div class="panel-title">
+          Payout Records
+          <span class="count" id="payoutCount">0 Items</span>
+        </div>
+        <div id="payoutContent">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/></svg>
+            <div>NO DATA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-profile" class="screen">
+    <div class="docs-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <span>Merchant <em>Profile</em></span>
+      </div>
+      <button class="btn btn-sm btn-outline" style="width:auto" onclick="showScreen('dashboard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Kembali
+      </button>
+    </div>
+
+    <div id="profileContent">
+      <div class="empty-state">Memuat…</div>
+    </div>
+
+    <div class="glass panel-card" style="margin-top:16px">
+      <div class="panel-title">
+        QRIS Statis
+        <span id="qrisStorageBadge"></span>
+      </div>
+      <div id="qrisSavedContent">
+        <div class="qris-empty">Memuat…</div>
+      </div>
+    </div>
+
+    <div class="glass panel-card" style="margin-top:16px">
+      <div class="panel-title">
+        API Key
+        <span id="apikeyStorageBadge"></span>
+      </div>
+      <div id="apikeyContent">
+        <div class="qris-empty">Memuat…</div>
+      </div>
+    </div>
+
+    <button class="btn btn-danger-soft" style="margin-top:16px" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </section>
+
+  <!-- ============ DOCS (REDESIGN) ============ -->
+  <section id="screen-docs" class="screen">
+    <div class="docs-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d68f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <span>API <em>Docs</em></span>
+      </div>
+      <button class="btn btn-sm btn-outline" style="width:auto" onclick="showScreen('dashboard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Kembali
+      </button>
+    </div>
+
+    <!-- HERO -->
+    <div class="docs-hero">
+      <div class="docs-hero-badge">
+        <span class="pulse-dot"></span> REST API • v2.2.0
+      </div>
+      <h1>GoPay Merchant API</h1>
+      <p>
+        Akses penuh ke <strong>profil merchant</strong>, <strong>riwayat QRIS</strong>,
+        <strong>payout</strong>, dan <strong>generator QRIS</strong>.
+        Semua endpoint bisa dipanggil via <code>API Key</code> tanpa perlu login ulang.
+      </p>
+      <div class="docs-base-url">
+        <span class="lbl">Base URL</span>
+        <span class="url" id="docsBaseUrl">—</span>
+        <button class="copy-url" id="btnCopyBaseUrl" title="Copy">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- QUICK NAV -->
+    <div class="docs-nav">
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-auth').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">01</span> Authentication
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-apikey').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">02</span> API Key
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-merchant').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">03</span> Merchant
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-tx').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">04</span> Transactions
+      </a>
+      <a class="docs-nav-pill" onclick="document.getElementById('sec-qris').scrollIntoView({behavior:'smooth'});return false;">
+        <span class="num">05</span> QRIS
+      </a>
+    </div>
+
+    <!-- ======= AUTH ======= -->
+    <div class="docs-section" id="sec-auth">
+      <div class="docs-section-title">01 • Authentication</div>
+
+      <div class="docs-auth-grid">
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">1</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Query Parameter</div>
+            <code>?apikey=GoPay_xxx</code>
+          </div>
+        </div>
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">2</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Header (API Key)</div>
+            <code>X-API-Key: GoPay_xxx</code>
+          </div>
+        </div>
+        <div class="docs-auth-card">
+          <div class="docs-auth-num">3</div>
+          <div style="flex:1;min-width:0">
+            <div class="name">Header (Bearer)</div>
+            <code>Authorization: Bearer GoPay_xxx</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-note info">
+        <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 22h4M8 14c-1.3-1-2-2.5-2-4a6 6 0 0 1 12 0c0 1.5-.7 3-2 4l-1 2H9z"/></svg></span>
+        <div>
+          Endpoint <code>/gopay/otp</code> dan <code>/gopay/token</code> <strong>tidak butuh</strong> API key.
+          Sisanya bisa pakai API key, <code>?token=</code> access token, atau keduanya.
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/otp</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Kirim kode OTP 4-digit ke nomor HP merchant via SMS.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param">
+              <span class="name">phone</span>
+              <span class="type">string</span>
+              <span class="req">REQ</span>
+              <span class="desc">Nomor HP tanpa +62 (contoh: 81234567890)</span>
+            </div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Request</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre><span class="tk-cmd">GET</span> /gopay/otp?phone=<span class="tk-str">81234567890</span></pre>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"data"</span>: {
+    <span class="tk-key">"otp_token"</span>: <span class="tk-str">"eyJhbGciOiJIUzI1NiIs..."</span>,
+    <span class="tk-key">"message"</span>: <span class="tk-str">"Kode OTP 4 digit telah dikirim via SMS"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/token</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Tukar OTP dengan access token & refresh token.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">otp</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Kode OTP 4 digit</span></div>
+            <div class="docs-param"><span class="name">otp_token</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Token dari response /gopay/otp</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= API KEY ======= -->
+    <div class="docs-section" id="sec-apikey">
+      <div class="docs-section-title">02 • API Key <span class="docs-count">3 endpoints</span></div>
+
+      <div class="docs-note success">
+        <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 9-9 2 2-3 3 2 2-3 3-2-2-3 3"/></svg></span>
+        <div>
+          Generate API key di halaman <strong>Profile</strong>. API key memungkinkan akses
+          endpoint dari aplikasi eksternal tanpa login ulang. Kalau access token expired,
+          backend otomatis refresh menggunakan refresh token yang tersimpan.
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method post">POST</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Generate API key baru. Key lama otomatis tidak valid.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>
+            Body (JSON)
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+            <div class="docs-param"><span class="name">access_token</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Access token GoBiz</span></div>
+            <div class="docs-param"><span class="name">refresh_token</span><span class="type">string</span><span class="opt">OPT</span><span class="desc">Untuk auto-refresh token</span></div>
+            <div class="docs-param"><span class="name">prefix</span><span class="type">string</span><span class="opt">OPT</span><span class="desc">Default "GoPay_" • 2-20 char alfanumerik + _ . -</span></div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"apikey"</span>: <span class="tk-str">"GoPay_a1b2c3d4..."</span>,
+  <span class="tk-key">"prefix"</span>: <span class="tk-str">"GoPay_"</span>,
+  <span class="tk-key">"created_at"</span>: <span class="tk-str">"2025-01-15T10:30:00.000Z"</span>,
+  <span class="tk-key">"storage"</span>: <span class="tk-str">"redis"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Ambil info API key aktif milik merchant.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method del">DELETE</span>
+          <span class="docs-path">/gopay/apikey</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Hapus API key aktif.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query / Body
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= MERCHANT ======= -->
+    <div class="docs-section" id="sec-merchant">
+      <div class="docs-section-title">03 • Merchant <span class="docs-count">3 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/validate</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Validasi token / API key dan ambil basic user info.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-note info" style="margin-top:0">
+            <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div>Cocok untuk cek apakah API key masih valid.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/profile</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Profil lengkap merchant — nama, email, nomor HP, merchant ID.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"profile"</span>: {
+    <span class="tk-key">"name"</span>: <span class="tk-str">"Budi Santoso"</span>,
+    <span class="tk-key">"email"</span>: <span class="tk-str">"budi@mail.com"</span>,
+    <span class="tk-key">"phone"</span>: <span class="tk-str">"+62812345..."</span>,
+    <span class="tk-key">"merchant_id"</span>: <span class="tk-str">"G480199302"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/me</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Raw response dari GoBiz API (untuk debugging).</div>
+      </div>
+    </div>
+
+    <!-- ======= TRANSACTIONS ======= -->
+    <div class="docs-section" id="sec-tx">
+      <div class="docs-section-title">04 • Transactions <span class="docs-count">2 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/mutasi</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Riwayat transaksi QRIS. Default 7 hari terakhir.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">start_time</span><span class="type">ISO date</span><span class="opt">OPT</span><span class="desc">Default: 7 hari lalu</span></div>
+          </div>
+          <div class="docs-note success" style="margin-top:10px">
+            <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>
+            <div>Field <code>amount</code> sudah dalam <strong>rupiah</strong> (bukan sen).</div>
+          </div>
+          <div class="docs-code">
+            <div class="docs-code-head">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span class="label">Response</span>
+              <button class="copy" onclick="docsCopy(event)">COPY</button>
+            </div>
+            <pre>{
+  <span class="tk-key">"success"</span>: <span class="tk-bool">true</span>,
+  <span class="tk-key">"total"</span>: <span class="tk-num">2</span>,
+  <span class="tk-key">"data"</span>: [
+    {
+      <span class="tk-key">"id"</span>: <span class="tk-str">"jrn_abc"</span>,
+      <span class="tk-key">"reference_id"</span>: <span class="tk-str">"REF001"</span>,
+      <span class="tk-key">"status"</span>: <span class="tk-str">"settlement"</span>,
+      <span class="tk-key">"time"</span>: <span class="tk-str">"2025-01-15T10:30:00Z"</span>,
+      <span class="tk-key">"amount"</span>: <span class="tk-num">1000</span>
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/payouts</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Daftar payout / pencairan dana ke rekening bank.</div>
+      </div>
+    </div>
+
+    <!-- ======= QRIS ======= -->
+    <div class="docs-section" id="sec-qris">
+      <div class="docs-section-title">05 • QRIS <span class="docs-count">5 endpoints</span></div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/create</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Generate QRIS dinamis dari static QR + nominal.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">amount</span><span class="type">number</span><span class="req">REQ</span><span class="desc">Nominal rupiah (contoh: 30000)</span></div>
+            <div class="docs-param"><span class="name">static_qr</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Payload QRIS statis</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/status</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Cek status pembayaran QRIS — <strong>PAID</strong> atau <strong>PENDING</strong>.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Query Parameters
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">amount</span><span class="type">number</span><span class="req">REQ</span><span class="desc">Nominal rupiah yang di-generate</span></div>
+            <div class="docs-param"><span class="name">created_at</span><span class="type">ISO date</span><span class="req">REQ</span><span class="desc">Timestamp dari response create</span></div>
+          </div>
+          <div class="docs-note warn" style="margin-top:10px">
+            <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 9v5m0 3h.01"/></svg></span>
+            <div><strong>Rate limit:</strong> jangan polling lebih dari 1x per 5 detik.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method post">POST</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Simpan / ganti QRIS statis milik merchant.</div>
+        <div class="docs-endpoint-body">
+          <div class="docs-params-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>
+            Body (JSON)
+          </div>
+          <div class="docs-params">
+            <div class="docs-param"><span class="name">phone</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Nomor HP merchant</span></div>
+            <div class="docs-param"><span class="name">static_qr</span><span class="type">string</span><span class="req">REQ</span><span class="desc">Payload QRIS statis</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method">GET</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Ambil QRIS statis yang tersimpan.</div>
+      </div>
+
+      <div class="docs-endpoint">
+        <div class="docs-endpoint-head" onclick="docsToggle(this)">
+          <span class="docs-method del">DELETE</span>
+          <span class="docs-path">/gopay/qris/saved</span>
+          <svg class="docs-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="docs-endpoint-desc">Hapus QRIS statis yang tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- ======= CONTOH ======= -->
+    <div class="docs-section">
+      <div class="docs-section-title">Contoh Integrasi</div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">cURL</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-comment"># Ambil profil via API Key</span>
+<span class="tk-cmd">curl</span> -H <span class="tk-str">"X-API-Key: GoPay_xxx"</span> \
+  <span class="tk-str">"https://yourapp.vercel.app/gopay/profile"</span></pre>
+      </div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">JavaScript</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-comment">// Fetch riwayat transaksi</span>
+<span class="tk-cmd">const</span> res = <span class="tk-cmd">await</span> fetch(
+  <span class="tk-str">"https://yourapp.vercel.app/gopay/mutasi?apikey=GoPay_xxx"</span>
+);
+<span class="tk-cmd">const</span> data = <span class="tk-cmd">await</span> res.json();
+console.log(data.data);</pre>
+      </div>
+
+      <div class="docs-code">
+        <div class="docs-code-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="label">Python</span>
+          <button class="copy" onclick="docsCopy(event)">COPY</button>
+        </div>
+        <pre><span class="tk-cmd">import</span> requests
+
+headers = {<span class="tk-str">"X-API-Key"</span>: <span class="tk-str">"GoPay_xxx"</span>}
+r = requests.get(
+    <span class="tk-str">"https://yourapp.vercel.app/gopay/profile"</span>,
+    headers=headers
+)
+<span class="tk-cmd">print</span>(r.json())</pre>
+      </div>
+    </div>
+
+    <div class="docs-footer">
+      <div>GoMerchPro API — Documentation</div>
+      <a href="#" onclick="showScreen('dashboard');return false;">← Kembali ke Dashboard</a>
+      <span class="ver">v2.2.0 • Build stable</span>
+    </div>
+  </section>
+</div>
+
+<button class="console-fab" id="consoleFab" onclick="toggleConsole()" style="display:none">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+  CONSOLE
+</button>
+<div class="console-drawer glass-strong" id="consoleDrawer">
+  <div class="console-head">
+    <h3>API Traffic Monitor</h3>
+    <div class="console-head-actions">
+      <button class="btn btn-sm btn-ghost" onclick="clearConsole()">CLEAR</button>
+      <button class="btn btn-sm btn-danger-soft" onclick="toggleConsole(false)">CLOSE ✕</button>
+    </div>
+  </div>
+  <div class="console-body" id="consoleBody">
+    <div class="console-empty">Belum ada request</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  phone: '',
+  otpToken: '',
+  accessToken: '',
+  refreshToken: '',
+  qrisCreatedAt: null,
+  qrisAmount: null,
+  accessExpanded: false,
+  refreshExpanded: false,
+  logs: [],
+  historyLoaded: false,
+  payoutsLoaded: false,
+  profileLoaded: false,
+  savedQris: null,
+  storageMode: 'none',
+  apiKey: null,
+  apiKeyPrefix: 'GoPay_',
+  apiKeyCreatedAt: null,
+  apiKeyStorage: 'none',
+  apiKeyRevealed: false
+};
+
+(function detectLowEnd() {
+  try {
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4;
+    if (cores <= 4 || mem <= 2) document.documentElement.classList.add('reduced');
+  } catch (_) {}
+})();
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
+  el.classList.add('show');
+}
+function hideError(id) { document.getElementById(id)?.classList.remove('show'); }
+
+let currentScreen = 'home';
+function toggleNavDrawer(open) {
+  const drawer = document.getElementById('navDrawer');
+  const backdrop = document.getElementById('navBackdrop');
+  if (!drawer || !backdrop) return;
+  drawer.classList.toggle('open', !!open);
+  backdrop.classList.toggle('open', !!open);
+  drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+  document.body.classList.toggle('drawer-open', !!open);
+  if (open) drawer.querySelector('.drawer-link')?.focus({ preventScroll: true });
+}
+function navigateTo(target) {
+  if (['qris','history','payouts'].includes(target)) {
+    if (!state.accessToken) { showScreen('login'); toast('Login terlebih dahulu untuk membuka workspace'); return; }
+    showScreen('dashboard');
+    switchTab(target);
+  } else if (['dashboard','profile'].includes(target) && !state.accessToken) {
+    showScreen('login'); toast('Login terlebih dahulu untuk membuka workspace');
+  } else showScreen(target);
+  toggleNavDrawer(false);
+}
+function showScreen(name, options = {}) {
+  const target = document.getElementById('screen-' + name);
+  if (!target) return;
+  const previous = document.querySelector('.screen.active');
+  if (previous && previous !== target) {
+    previous.classList.remove('active','leaving');
+  }
+  document.querySelectorAll('.screen').forEach(s => { if (s !== target) s.classList.remove('active','leaving'); });
+  target.classList.add('active');
+  currentScreen = name;
+  const app = document.getElementById('appRoot');
+  const connected = !!state.accessToken && ['dashboard','profile','docs'].includes(name);
+  const wideMode = ['home','dashboard','docs','profile'].includes(name);
+  app.classList.toggle('docs-mode', wideMode);
+  const badge = document.getElementById('headerBadge');
+  const profileBtn = document.getElementById('profileTopBtn');
+  if (badge) badge.style.display = connected ? 'flex' : 'none';
+  if (profileBtn) profileBtn.style.display = connected ? 'grid' : 'none';
+  const consoleFab = document.getElementById('consoleFab');
+  if (consoleFab) consoleFab.style.display = connected && name === 'dashboard' ? '' : 'none';
+  document.querySelectorAll('.drawer-link[data-screen]').forEach(el => el.classList.toggle('active', el.dataset.screen === name || (name === 'dashboard' && ['qris','history','payouts'].includes(state.activeTab) && el.dataset.screen === state.activeTab)));
+  if (!connected || name !== 'dashboard') toggleConsole(false);
+  if (!options.keepScroll) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  if (name === 'profile') loadProfile();
+  if (name === 'dashboard') updateDashboardMetrics();
+  if (name === 'home' || name === 'login' || name === 'otp') toggleNavDrawer(false);
+  try { history.replaceState({ screen: name }, '', name === 'home' ? '/' : ('/#' + name)); } catch (_) {}
+}
+function updateDashboardMetrics() {
+  const session = document.getElementById('metricSession');
+  if (session) session.textContent = state.accessToken ? 'Connected' : 'Offline';
+  const count = document.getElementById('metricTransactions');
+  if (count) count.textContent = 'Open history';
+}
+
+function maskToken(t) {
+  if (!t) return '—';
+  if (t.length <= 40) return t;
+  return t.slice(0, 36) + '…' + t.slice(-12);
+}
+function renderTokens() {
+  const at = document.getElementById('accessTokenText');
+  const rt = document.getElementById('refreshTokenText');
+  at.textContent = state.accessExpanded ? (state.accessToken || '—') : maskToken(state.accessToken);
+  rt.textContent = state.refreshExpanded ? (state.refreshToken || '—') : maskToken(state.refreshToken);
+  at.classList.toggle('expanded', state.accessExpanded);
+  rt.classList.toggle('expanded', state.refreshExpanded);
+  document.getElementById('accessToggleLabel').textContent = state.accessExpanded ? 'SEMBUNYIKAN' : 'TAMPILKAN';
+  document.getElementById('refreshToggleLabel').textContent = state.refreshExpanded ? 'SEMBUNYIKAN' : 'TAMPILKAN';
+}
+function toggleToken(which) {
+  if (which === 'access') state.accessExpanded = !state.accessExpanded;
+  else state.refreshExpanded = !state.refreshExpanded;
+  renderTokens();
+}
+async function copyText(t) {
+  if (!t) return toast('Kosong');
+  try {
+    await navigator.clipboard.writeText(t);
+    toast('Copied to clipboard');
+  } catch { toast('Gagal menyalin'); }
+}
+function formatRupiah(n) {
+  if (n == null || isNaN(Number(n))) return 'Rp 0';
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+function formatTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+}
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function maskApiKey(key) {
+  if (!key) return '';
+  if (key.length <= 16) return key;
+  return key.slice(0, 10) + '…' + key.slice(-6);
+}
+
+function addLog(method, path, status, data) {
+  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  state.logs.unshift({ time, method, path, status, data });
+  if (state.logs.length > 30) state.logs.pop();
+  renderConsole();
+}
+function renderConsole() {
+  const body = document.getElementById('consoleBody');
+  if (!state.logs.length) {
+    body.innerHTML = '<div class="console-empty">Belum ada request</div>';
+    return;
+  }
+  body.innerHTML = state.logs.map((l, i) => `
+    <div class="console-item">
+      <div style="flex:1">
+        <div><span class="time">${l.time}</span> &nbsp; <span class="method">${l.method}</span> ${l.path}</div>
+        <button class="copy-json" onclick="copyText(JSON.stringify(state.logs[${i}].data,null,2))">Copy JSON</button>
+      </div>
+      <span class="status-code ${l.status >= 400 ? 'err' : ''}">${l.status}</span>
+    </div>
+  `).join('');
+}
+function clearConsole() { state.logs = []; renderConsole(); }
+function toggleConsole(force) {
+  const d = document.getElementById('consoleDrawer');
+  if (typeof force === 'boolean') d.classList.toggle('open', force);
+  else d.classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const d = document.getElementById('consoleDrawer');
+  const f = document.getElementById('consoleFab');
+  if (!d.classList.contains('open')) return;
+  if (d.contains(e.target) || f.contains(e.target)) return;
+  d.classList.remove('open');
+}, true);
+
+async function api(path, params = {}) {
+  const u = new URL(path, location.origin);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, v);
+  });
+  try {
+    const r = await fetch(u);
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    addLog('GET', path, r.status, data);
+    return { ok: r.ok, status: r.status, data };
+  } catch (e) {
+    addLog('GET', path, 0, { error: e.message });
+    return { ok: false, status: 0, data: { success: false, error: e.message } };
+  }
+}
+async function apiJson(method, path, body) {
+  try {
+    const r = await fetch(path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    addLog(method, path, r.status, data);
+    return { ok: r.ok, status: r.status, data };
+  } catch (e) {
+    addLog(method, path, 0, { error: e.message });
+    return { ok: false, status: 0, data: { success: false, error: e.message } };
+  }
+}
+
+async function refreshAll() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('spinning');
+  try {
+    if (state.accessToken) {
+      const v = await api('/gopay/validate', { token: state.accessToken });
+      if (v.status === 401) { logout(); return; }
+    }
+    state.historyLoaded = false;
+    state.payoutsLoaded = false;
+    state.profileLoaded = false;
+
+    const profileScreen = document.getElementById('screen-profile');
+    if (profileScreen && profileScreen.classList.contains('active')) {
+      await loadProfile();
+    } else {
+      const activeTab = document.querySelector('.menu-tab.active')?.dataset.tab;
+      if (activeTab === 'payouts') await loadPayouts();
+      else if (activeTab === 'qris') await renderQrisPanel();
+      else await loadHistory();
+    }
+    toast('Refreshed ✅');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 400);
+  }
+}
+
+async function requestOtp() {
+  hideError('loginError');
+  let phone = document.getElementById('phoneInput').value.trim().replace(/\D/g, '');
+  if (phone.startsWith('62')) phone = phone.slice(2);
+  if (phone.startsWith('0')) phone = phone.slice(1);
+  if (!phone || phone.length < 9) {
+    showError('loginError', 'Masukkan nomor HP yang valid');
+    return;
+  }
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Mengirim OTP…';
+
+  const res = await api('/gopay/otp', { phone });
+  btn.disabled = false;
+  btn.innerHTML = 'Lanjutkan <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+
+  if (!res.ok || !res.data.success) {
+    const err = res.data.error;
+    showError('loginError', typeof err === 'object' ? (err.message || JSON.stringify(err)) : (err || 'Gagal mengirim OTP'));
+    return;
+  }
+  state.phone = phone;
+  state.otpToken = res.data.data?.otp_token || '';
+  document.getElementById('otpPhoneDisplay').textContent = '+62' + phone;
+  document.querySelectorAll('#otpBoxes input').forEach(i => i.value = '');
+  showScreen('otp');
+  document.querySelector('#otpBoxes input')?.focus();
+}
+
+async function verifyOtp() {
+  hideError('otpError');
+  const digits = [...document.querySelectorAll('#otpBoxes input')].map(i => i.value).join('');
+  if (!/^\d{4}$/.test(digits)) {
+    showError('otpError', 'Masukkan kode OTP 4 digit');
+    return;
+  }
+  const btn = document.getElementById('btnVerify');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner" style="border-top-color:#fff"></span> Memverifikasi…';
+
+  const res = await api('/gopay/token', { otp: digits, otp_token: state.otpToken });
+  btn.disabled = false;
+  btn.textContent = 'Verifikasi';
+
+  if (!res.ok || !res.data.success) {
+    const err = res.data.error;
+    showError('otpError', typeof err === 'object' ? (err.message || JSON.stringify(err)) : (err || 'OTP salah atau kedaluwarsa'));
+    return;
+  }
+  const d = res.data.data || res.data;
+  state.accessToken = d.access_token || d.data?.access_token || '';
+  state.refreshToken = d.refresh_token || d.data?.refresh_token || '';
+
+  try {
+    localStorage.setItem('gm_access', state.accessToken);
+    localStorage.setItem('gm_refresh', state.refreshToken);
+    localStorage.setItem('gm_phone', state.phone);
+  } catch (_) {}
+
+  renderTokens();
+  showScreen('dashboard');
+  toast('Login berhasil');
+  state.historyLoaded = false;
+  state.profileLoaded = false;
+  state.savedQris = null;
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  loadHistory();
+}
+
+function logout() {
+  state.accessToken = '';
+  state.refreshToken = '';
+  state.otpToken = '';
+  state.historyLoaded = false;
+  state.payoutsLoaded = false;
+  state.profileLoaded = false;
+  state.savedQris = null;
+  state.storageMode = 'none';
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  state.apiKeyRevealed = false;
+  try {
+    localStorage.removeItem('gm_access');
+    localStorage.removeItem('gm_refresh');
+    localStorage.removeItem('gm_phone');
+  } catch (_) {}
+  showScreen('login');
+  toast('Logged out');
+}
+
+async function switchTab(tab) {
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab)?.classList.add('active');
+  if (tab === 'history' && !state.historyLoaded) loadHistory();
+  if (tab === 'payouts' && !state.payoutsLoaded) loadPayouts();
+  if (tab === 'qris') await renderQrisPanel();
+}
+
+async function ensureSavedQrisLoaded() {
+  if (state.savedQris) return state.savedQris;
+  if (!state.phone) return null;
+
+  const res = await api('/gopay/qris/saved', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.static_qr) {
+    state.savedQris = res.data.static_qr;
+    state.storageMode = 'redis';
+    return state.savedQris;
+  }
+  try {
+    const local = localStorage.getItem('gm_qris_' + state.phone);
+    if (local) {
+      state.savedQris = local;
+      state.storageMode = 'local';
+      return state.savedQris;
+    }
+  } catch (_) {}
+  return null;
+}
+
+async function renderQrisPanel() {
+  await ensureSavedQrisLoaded();
+
+  const hasQris = !!state.savedQris;
+  const activeCard = document.getElementById('qrisActiveCard');
+  const manualSection = document.getElementById('qrisManualSection');
+
+  if (hasQris) {
+    manualSection.style.display = 'none';
+    activeCard.style.display = 'block';
+    const tail = state.savedQris.slice(-8);
+    activeCard.innerHTML = `
+      <div class="qris-active-row">
+        <div class="qris-active-icon">✓</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">QRIS Aktif</div>
+          <div style="font-size:11px;color:var(--muted);font-family:ui-monospace,monospace;word-break:break-all">•••${escapeHtml(tail)}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline" style="margin-top:12px;width:100%" onclick="showScreen('profile')">
+        Ubah di Profile →
+      </button>
+    `;
+  } else {
+    manualSection.style.display = 'block';
+    activeCard.style.display = 'none';
+  }
+}
+
+async function loadHistory() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('historyContent');
+  content.innerHTML = '<div class="empty-state">Memuat…</div>';
+  const res = await api('/gopay/mutasi', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = `<div class="empty-state">${escapeHtml(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : res.data.error) || 'Gagal memuat'}</div>`;
+    return;
+  }
+  state.historyLoaded = true;
+  const list = res.data.data || [];
+  document.getElementById('historyCount').textContent = list.length + ' Items';
+  if (!list.length) {
+    content.innerHTML = '<div class="empty-state"><div>NO DATA</div></div>';
+    return;
+  }
+  content.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>ID REF</th><th>WAKTU</th><th>NOMINAL</th></tr></thead>
+      <tbody>
+        ${list.map(item => `
+          <tr>
+            <td style="font-family:monospace;font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(item.reference_id || item.id)}">${escapeHtml(item.reference_id || item.id || '—')}</td>
+            <td>${escapeHtml(formatTime(item.time))}</td>
+            <td style="font-weight:600;color:var(--green)">${formatRupiah(item.amount || 0)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function loadPayouts() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('payoutContent');
+  content.innerHTML = '<div class="empty-state">Memuat…</div>';
+  const res = await api('/gopay/payouts', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = `<div class="empty-state">${escapeHtml(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : res.data.error) || 'Gagal memuat'}</div>`;
+    return;
+  }
+  state.payoutsLoaded = true;
+  const raw = res.data.data;
+  const list = Array.isArray(raw) ? raw : (raw?.data || raw?.payouts || raw?.items || []);
+  document.getElementById('payoutCount').textContent = list.length + ' Items';
+  if (!list.length) {
+    content.innerHTML = '<div class="empty-state"><div>NO DATA</div></div>';
+    return;
+  }
+  content.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>BANK</th><th>RECIPIENT</th><th>STATUS</th></tr></thead>
+      <tbody>
+        ${list.map(item => {
+          const bank = item.bank_name || item.bank || item.channel || item.payment_method || 'GOPAY';
+          const name = item.account_name || item.recipient_name || item.name || item.beneficiary_name || '—';
+          const st = (item.status || item.state || 'PAID').toString().toUpperCase();
+          return `<tr>
+            <td style="font-weight:700">${escapeHtml(bank)}</td>
+            <td>${escapeHtml(name)}</td>
+            <td><span class="status-pill ${st.toLowerCase().includes('paid') || st.toLowerCase().includes('success') ? 'paid' : 'pending'}">${escapeHtml(st)}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function loadProfile() {
+  if (!state.accessToken) return;
+  const content = document.getElementById('profileContent');
+  content.innerHTML = '<div class="empty-state">Memuat profil…</div>';
+
+  const res = await api('/gopay/profile', { token: state.accessToken });
+  if (!res.ok || !res.data.success) {
+    content.innerHTML = '<div class="empty-state">Gagal memuat profil</div>';
+    return;
+  }
+  const p = res.data.profile;
+  state.profileLoaded = true;
+  const initial = (p.name || '?').trim().charAt(0).toUpperCase();
+
+  content.innerHTML = `
+    <div class="glass profile-header">
+      <div class="profile-avatar">${escapeHtml(initial)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="profile-name">${escapeHtml(p.name || '—')}</div>
+        <div class="profile-sub">${p.merchant_id ? 'ID: ' + escapeHtml(p.merchant_id) : 'Merchant GoBiz'}</div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="profile-item">
+        <div class="lbl">Nama Lengkap</div>
+        <div class="val">${escapeHtml(p.name || '—')}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">Email</div>
+        <div class="val">${escapeHtml(p.email || '—')}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">No. HP</div>
+        <div class="val">${escapeHtml(p.phone || (state.phone ? '+62' + state.phone : '—'))}</div>
+      </div>
+    </div>
+  `;
+
+  loadSavedQris();
+  loadApiKey();
+}
+
+function qrisStorageKey() { return 'gm_qris_' + (state.phone || 'anon'); }
+function setQrisStorageBadge() {
+  const el = document.getElementById('qrisStorageBadge');
+  if (!el) return;
+  if (state.storageMode === 'redis') el.innerHTML = '<span class="storage-badge redis">☁️ Cloud</span>';
+  else if (state.storageMode === 'local') el.innerHTML = '<span class="storage-badge local">💾 Lokal</span>';
+  else el.innerHTML = '';
+}
+
+async function loadSavedQris() {
+  if (!state.phone) return;
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = '<div class="qris-empty">Memuat…</div>';
+
+  const res = await api('/gopay/qris/saved', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.static_qr) {
+    state.savedQris = res.data.static_qr;
+    state.storageMode = 'redis';
+    setQrisStorageBadge();
+    renderQrisUploadFilled(res.data.static_qr);
+    return;
+  }
+
+  try {
+    const local = localStorage.getItem(qrisStorageKey());
+    if (local) {
+      state.savedQris = local;
+      state.storageMode = 'local';
+      setQrisStorageBadge();
+      renderQrisUploadFilled(local);
+      return;
+    }
+  } catch (_) {}
+
+  state.savedQris = null;
+  state.storageMode = 'none';
+  setQrisStorageBadge();
+  renderQrisUploadEmpty();
+}
+
+function renderQrisUploadEmpty() {
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = `
+    <div class="qris-upload-zone" id="qrisUploadZone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <div style="font-weight:700;color:var(--text);font-size:14px;margin-top:12px">PILIH GAMBAR QRIS</div>
+      <div style="font-size:11px;margin-top:6px;color:var(--muted)">JPG / PNG — auto baca static QR</div>
+    </div>
+    <input type="file" id="qrisUploadInput" accept="image/*" style="display:none">
+  `;
+  bindQrisUpload();
+}
+
+function renderQrisUploadFilled(qr) {
+  const content = document.getElementById('qrisSavedContent');
+  content.innerHTML = `
+    <div class="qris-upload-preview" id="qrisUploadZone">
+      <img id="savedQrisImg" alt="QRIS" src="">
+    </div>
+    <input type="file" id="qrisUploadInput" accept="image/*" style="display:none">
+    <div class="qris-upload-actions">
+      <button class="btn btn-sm btn-purple-soft" id="btnReplaceQris">GANTI GAMBAR</button>
+      <button class="btn btn-sm btn-danger-soft" id="btnDeleteQris">HAPUS</button>
+    </div>
+    <div class="qris-string-label">Static QR String (readonly)</div>
+    <div class="qris-string-box" id="savedQrisString">${escapeHtml(qr)}</div>
+  `;
+  renderQrImage(qr);
+  bindQrisUpload();
+  document.getElementById('btnReplaceQris').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('qrisUploadInput').click();
+  });
+  document.getElementById('btnDeleteQris').addEventListener('click', deleteQris);
+}
+
+function renderQrImage(qrString) {
+  const img = document.getElementById('savedQrisImg');
+  if (!img) return;
+  const encoded = encodeURIComponent(qrString);
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=${encoded}`;
+  img.onerror = () => {
+    img.style.display = 'none';
+    const note = document.createElement('div');
+    note.textContent = 'Preview gagal dimuat';
+    note.style.cssText = 'color:#8b9aab;font-size:11px;text-align:center;padding:20px';
+    img.parentNode.appendChild(note);
+  };
+}
+
+function bindQrisUpload() {
+  const zone = document.getElementById('qrisUploadZone');
+  const input = document.getElementById('qrisUploadInput');
+  if (!zone || !input) return;
+  zone.addEventListener('click', (e) => { if (e.target !== input) input.click(); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', async e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const f = e.dataTransfer?.files?.[0];
+    if (f) await processQrisUpload(f);
+  });
+  input.addEventListener('change', async e => {
+    const f = e.target.files?.[0];
+    if (f) await processQrisUpload(f);
+    input.value = '';
+  });
+}
+
+async function processQrisUpload(file) {
+  const zone = document.getElementById('qrisUploadZone');
+  zone?.classList.add('loading');
+  try {
+    toast('Membaca QR…');
+    const str = await decodeQrFromFile(file);
+
+    const res = await apiJson('POST', '/gopay/qris/saved', {
+      phone: state.phone, static_qr: str
+    });
+
+    if (res.ok && res.data.success) {
+      state.savedQris = str;
+      state.storageMode = 'redis';
+      setQrisStorageBadge();
+      toast('QRIS tersimpan di cloud ☁️');
+      renderQrisUploadFilled(str);
+      return;
+    }
+
+    try {
+      localStorage.setItem(qrisStorageKey(), str);
+      state.savedQris = str;
+      state.storageMode = 'local';
+      setQrisStorageBadge();
+      toast('QRIS tersimpan di browser 💾');
+      renderQrisUploadFilled(str);
+    } catch (e) {
+      toast('Gagal simpan QRIS');
+    }
+  } catch (err) {
+    toast(err.message || 'Gagal decode QR');
+  } finally {
+    zone?.classList.remove('loading');
+  }
+}
+
+async function deleteQris() {
+  if (!confirm('Hapus QRIS tersimpan?')) return;
+  await apiJson('DELETE', '/gopay/qris/saved', { phone: state.phone });
+  try { localStorage.removeItem(qrisStorageKey()); } catch (_) {}
+  state.savedQris = null;
+  state.storageMode = 'none';
+  setQrisStorageBadge();
+  toast('QRIS dihapus');
+  renderQrisUploadEmpty();
+}
+
+function decodeQrFromFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type || !file.type.startsWith('image/')) return reject(new Error('File bukan gambar'));
+    if (typeof jsQR !== 'function') return reject(new Error('Library jsQR belum termuat'));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const MAX = 1200;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            const r = Math.min(MAX / w, MAX / h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, w, h);
+          const d = ctx.getImageData(0, 0, w, h);
+          const code = jsQR(d.data, d.width, d.height, { inversionAttempts: 'attemptBoth' });
+          if (code && code.data) resolve(code.data);
+          else reject(new Error('QR tidak terdeteksi, coba gambar lebih jelas'));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = () => reject(new Error('Gagal memuat gambar'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processQrFile(file) {
+  const zone = document.getElementById('dropZone');
+  const label = document.getElementById('dropZoneText');
+  const originalText = label.textContent;
+  zone.classList.add('loading');
+  label.textContent = 'MEMBACA QR…';
+  try {
+    const str = await decodeQrFromFile(file);
+    document.getElementById('qrisStatic').value = str;
+    toast('QR berhasil terbaca ✅');
+  } catch (err) {
+    toast(err.message || 'Gagal decode QR');
+  } finally {
+    zone.classList.remove('loading');
+    label.textContent = originalText;
+  }
+}
+
+function handleQrFile(e) {
+  const file = e.target.files?.[0];
+  if (file) processQrFile(file);
+  e.target.value = '';
+}
+
+async function generateQris() {
+  const amount = document.getElementById('qrisAmount').value.trim();
+  const staticQr = state.savedQris || document.getElementById('qrisStatic').value.trim();
+  if (!amount) { toast('Isi nominal'); return; }
+  if (!staticQr) { toast('QRIS belum diset — upload di Profile atau drop gambar'); return; }
+
+  const btn = document.getElementById('btnGenerateQris');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Generating…';
+
+  const res = await api('/gopay/qris/create', { amount, static_qr: staticQr });
+  btn.disabled = false;
+  btn.textContent = 'Generate QR';
+
+  if (!res.ok || !res.data.success) {
+    toast(typeof res.data.error === 'object' ? JSON.stringify(res.data.error) : (res.data.error || 'Gagal generate'));
+    return;
+  }
+  state.qrisCreatedAt = res.data.created_at;
+  state.qrisAmount = res.data.amount;
+  document.getElementById('qrisImage').src = res.data.image_url;
+  document.getElementById('qrisResultAmount').textContent = formatRupiah(res.data.amount);
+  document.getElementById('qrisResultTime').textContent = formatTime(res.data.created_at);
+  document.getElementById('qrisStatusBadge').className = 'qris-status-badge pending';
+  document.getElementById('qrisStatusBadge').innerHTML = '<span>●</span> PENDING';
+  document.getElementById('qrisResult').classList.add('show');
+  toast('QRIS berhasil dibuat');
+  state.historyLoaded = false;
+}
+
+async function checkQrisStatus() {
+  if (!state.accessToken || !state.qrisAmount || !state.qrisCreatedAt) {
+    toast('Generate QRIS dulu');
+    return;
+  }
+  const res = await api('/gopay/qris/status', {
+    token: state.accessToken,
+    amount: state.qrisAmount,
+    created_at: state.qrisCreatedAt
+  });
+  if (!res.ok || !res.data.success) { toast('Gagal cek status'); return; }
+  const st = res.data.status;
+  const badge = document.getElementById('qrisStatusBadge');
+  if (st === 'PAID') {
+    badge.className = 'qris-status-badge paid';
+    badge.innerHTML = '<span>●</span> PAID';
+    toast('Pembayaran diterima!');
+    state.historyLoaded = false;
+  } else {
+    badge.className = 'qris-status-badge pending';
+    badge.innerHTML = '<span>●</span> PENDING';
+    toast('Masih menunggu pembayaran');
+  }
+}
+
+function apiKeyStorageKey() { return 'gm_apikey_' + (state.phone || 'anon'); }
+function setApiKeyStorageBadge() {
+  const el = document.getElementById('apikeyStorageBadge');
+  if (!el) return;
+  if (state.apiKeyStorage === 'redis') el.innerHTML = '<span class="storage-badge redis">☁️ Cloud</span>';
+  else if (state.apiKeyStorage === 'local') el.innerHTML = '<span class="storage-badge local">💾 Lokal</span>';
+  else el.innerHTML = '';
+}
+
+async function loadApiKey() {
+  if (!state.phone) return;
+  const content = document.getElementById('apikeyContent');
+  content.innerHTML = '<div class="qris-empty">Memuat…</div>';
+
+  const res = await api('/gopay/apikey', { phone: state.phone });
+  if (res.ok && res.data.success && res.data.apikey) {
+    state.apiKey = res.data.apikey;
+    state.apiKeyPrefix = res.data.prefix || 'GoPay_';
+    state.apiKeyCreatedAt = res.data.created_at;
+    state.apiKeyStorage = 'redis';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    renderApiKeyFilled();
+    return;
+  }
+
+  try {
+    const local = localStorage.getItem(apiKeyStorageKey());
+    if (local) {
+      const d = JSON.parse(local);
+      state.apiKey = d.key;
+      state.apiKeyPrefix = d.prefix || 'GoPay_';
+      state.apiKeyCreatedAt = d.created_at;
+      state.apiKeyStorage = 'local';
+      state.apiKeyRevealed = false;
+      setApiKeyStorageBadge();
+      renderApiKeyFilled();
+      return;
+    }
+  } catch (_) {}
+
+  state.apiKey = null;
+  state.apiKeyStorage = 'none';
+  setApiKeyStorageBadge();
+  renderApiKeyEmpty();
+}
+
+function renderApiKeyEmpty() {
+  const content = document.getElementById('apikeyContent');
+  content.innerHTML = `
+    <div class="qris-empty" style="padding:10px 0 14px">
+      API key memberi akses ke REST API tanpa perlu login ulang.
+    </div>
+    <div class="field-label">Prefix API Key</div>
+    <div class="apikey-input-row">
+      <input type="text" id="apikeyPrefix" value="${escapeHtml(state.apiKeyPrefix || 'GoPay_')}" placeholder="GoPay_" maxlength="20">
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">2-20 char, alfanumerik + <code>_</code> <code>.</code> <code>-</code></div>
+    <button class="btn btn-primary" id="btnGenApiKey" style="margin-top:14px" onclick="generateApiKey()">
+      GENERATE API KEY
+    </button>
+  `;
+}
+
+function renderApiKeyFilled() {
+  const content = document.getElementById('apikeyContent');
+  const masked = maskApiKey(state.apiKey);
+  const shown = state.apiKeyRevealed ? state.apiKey : masked;
+  const eyeIcon = state.apiKeyRevealed
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  content.innerHTML = `
+    <div class="apikey-box">
+      <div class="apikey-value" id="apikeyValue">${escapeHtml(shown)}</div>
+      <div class="apikey-actions">
+        <button class="apikey-icon-btn" id="btnRevealKey" title="${state.apiKeyRevealed ? 'Sembunyikan' : 'Lihat'}">${eyeIcon}</button>
+        <button class="apikey-icon-btn" id="btnCopyKey" title="Copy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="apikey-meta">
+      <span>Dibuat: ${state.apiKeyCreatedAt ? escapeHtml(formatTime(state.apiKeyCreatedAt)) : '—'}</span>
+      <span>•</span>
+      <span>Prefix: ${escapeHtml(state.apiKeyPrefix)}</span>
+    </div>
+    <div class="apikey-actions" style="margin-top:12px">
+      <button class="btn btn-sm btn-purple-soft" id="btnRegenKey">REGENERATE</button>
+      <button class="btn btn-sm btn-danger-soft" id="btnDelKey">HAPUS</button>
+    </div>
+    ${state.apiKeyStorage === 'local' ? `
+      <div class="apikey-warn">
+        ⚠️ API key lokal tidak aktif untuk akses eksternal. Setup Upstash Redis untuk mengaktifkan.
+      </div>` : ''}
+    <div class="apikey-help">
+      <strong>Cara pakai:</strong><br>
+      • <code>?apikey=${escapeHtml(masked)}</code><br>
+      • Header <code>X-API-Key: ${escapeHtml(masked)}</code><br>
+      • Header <code>Authorization: Bearer ${escapeHtml(masked)}</code>
+    </div>
+  `;
+  document.getElementById('btnRevealKey').addEventListener('click', () => {
+    state.apiKeyRevealed = !state.apiKeyRevealed;
+    renderApiKeyFilled();
+  });
+  document.getElementById('btnCopyKey').addEventListener('click', () => copyText(state.apiKey));
+  document.getElementById('btnRegenKey').addEventListener('click', regenerateApiKey);
+  document.getElementById('btnDelKey').addEventListener('click', deleteApiKey);
+}
+
+async function generateApiKey() {
+  const prefixInput = document.getElementById('apikeyPrefix');
+  const prefix = (prefixInput?.value || 'GoPay_').trim();
+  if (prefix.length < 2 || prefix.length > 20 || !/^[A-Za-z0-9_.-]+$/.test(prefix)) {
+    toast('Prefix tidak valid (2-20 char alfanumerik + _ . -)');
+    return;
+  }
+
+  const btn = document.getElementById('btnGenApiKey');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Generating…'; }
+
+  const res = await apiJson('POST', '/gopay/apikey', {
+    phone: state.phone,
+    access_token: state.accessToken,
+    refresh_token: state.refreshToken,
+    prefix
+  });
+
+  if (res.ok && res.data.success) {
+    state.apiKey = res.data.apikey;
+    state.apiKeyPrefix = res.data.prefix;
+    state.apiKeyCreatedAt = res.data.created_at;
+    state.apiKeyStorage = 'redis';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    toast('API key dibuat ☁️');
+    renderApiKeyFilled();
+    return;
+  }
+
+  try {
+    const bytes = crypto.getRandomValues(new Uint8Array(24));
+    const rand = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const key = prefix + rand;
+    const data = {
+      key, prefix,
+      created_at: new Date().toISOString(),
+      access_token: state.accessToken,
+      refresh_token: state.refreshToken
+    };
+    localStorage.setItem(apiKeyStorageKey(), JSON.stringify(data));
+    state.apiKey = key;
+    state.apiKeyPrefix = prefix;
+    state.apiKeyCreatedAt = data.created_at;
+    state.apiKeyStorage = 'local';
+    state.apiKeyRevealed = false;
+    setApiKeyStorageBadge();
+    toast('API key dibuat (lokal) 💾');
+    renderApiKeyFilled();
+  } catch (e) {
+    toast('Gagal generate: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; }
+  }
+}
+
+async function regenerateApiKey() {
+  if (!confirm('Regenerate API key? Key lama akan langsung tidak valid.')) return;
+  await apiJson('DELETE', '/gopay/apikey', { phone: state.phone });
+  try { localStorage.removeItem(apiKeyStorageKey()); } catch (_) {}
+  state.apiKey = null;
+  renderApiKeyEmpty();
+  await generateApiKey();
+}
+
+async function deleteApiKey() {
+  if (!confirm('Hapus API key?')) return;
+  await apiJson('DELETE', '/gopay/apikey', { phone: state.phone });
+  try { localStorage.removeItem(apiKeyStorageKey()); } catch (_) {}
+  state.apiKey = null;
+  state.apiKeyCreatedAt = null;
+  state.apiKeyRevealed = false;
+  state.apiKeyStorage = 'none';
+  setApiKeyStorageBadge();
+  toast('API key dihapus');
+  renderApiKeyEmpty();
+}
+
+(function initOtpBoxes() {
+  const boxes = document.querySelectorAll('#otpBoxes input');
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v.slice(-1);
+      if (v && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+      paste.split('').forEach((ch, j) => { if (boxes[j]) boxes[j].value = ch; });
+      if (paste.length) boxes[Math.min(paste.length, boxes.length) - 1].focus();
+    });
+  });
+})();
+
+(function initDrop() {
+  const zone = document.getElementById('dropZone');
+  if (!zone) return;
+  ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('dragover'); }));
+  zone.addEventListener('drop', e => {
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processQrFile(file);
+  });
+})();
+
+function docsToggle(el) { el.parentElement.classList.toggle('open'); }
+function docsCopy(e) {
+  e.stopPropagation();
+  const code = e.target.closest('.docs-code');
+  const pre = code?.querySelector('pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    const old = e.target.textContent;
+    e.target.textContent = 'COPIED ✓';
+    e.target.style.color = 'var(--green)';
+    setTimeout(() => {
+      e.target.textContent = old;
+      e.target.style.color = '';
+    }, 1400);
+  }).catch(() => {});
+}
+
+(function initDocs() {
+  const el = document.getElementById('docsBaseUrl');
+  if (el) el.textContent = location.origin;
+  const copyBtn = document.getElementById('btnCopyBaseUrl');
+  if (copyBtn) copyBtn.addEventListener('click', () => copyText(location.origin));
+  // Buka endpoint pertama di tiap section untuk first impression
+  if (window.innerWidth >= 768) {
+    document.querySelectorAll('.docs-section .docs-endpoint').forEach((ep, i) => {
+      if (i === 0) ep.classList.add('open');
+    });
+  }
+})();
+
+(function restore() {
+  try {
+    const at = localStorage.getItem('gm_access');
+    const rt = localStorage.getItem('gm_refresh');
+    const ph = localStorage.getItem('gm_phone');
+    if (at) {
+      state.accessToken = at;
+      state.refreshToken = rt || '';
+      state.phone = ph || '';
+      renderTokens();
+      showScreen('dashboard');
+      if (navigator.onLine) {
+        api('/gopay/validate', { token: at }).then(res => {
+          if (res.status === 401) {
+            toast('Session kedaluwarsa, login ulang');
+            logout();
+          }
+        });
+      }
+    }
+  } catch (_) {}
+})();
+
+document.getElementById('phoneInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') requestOtp();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') toggleNavDrawer(false);
+});
+window.addEventListener('popstate', () => { const route = (location.hash || '#home').slice(1); if (document.getElementById('screen-' + route)) showScreen(route, { keepScroll: true }); });
+
+</script>
+</body>
+</html>
